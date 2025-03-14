@@ -60,3 +60,30 @@ class UserPlantAccessTestCase(APITestCase):
         response = self.client.get('/api/user-plants/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+class WateringHistoryTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="wateringuser",
+            password="WaterPass123!"
+        )
+        self.plant = Plant.objects.create(
+            name="Cactus",
+            species="Succulent",
+            water_amount_ml=50,
+            watering_frequency_days=14
+        )
+        self.user_plant = UserPlant.objects.create(user=self.user, plant=self.plant)
+        self.token = RefreshToken.for_user(self.user).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+
+    def test_record_watering(self):
+        response = self.client.post(f'/api/user-plants/{self.user_plant.id}/water/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(WateringHistory.objects.count(), 1)
+
+    def test_access_watering_history(self):
+        WateringHistory.objects.create(user_plant=self.user_plant)
+        response = self.client.get('/api/watering-history/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)

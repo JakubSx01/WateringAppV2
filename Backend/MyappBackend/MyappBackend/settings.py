@@ -89,7 +89,7 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT'),
         'OPTIONS': {
-            'sslmode': 'require',  # Wymuszenie SSL w produkcji
+            'sslmode': 'disable',  # Wymuszenie SSL w produkcji
         }
     }
 }

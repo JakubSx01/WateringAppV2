@@ -1,44 +1,33 @@
-import React, { useState } from 'react';
-import api from '../services/api';
-import '../styles/Login.css'; // Zakładamy, że plik Login.css znajduje się w katalogu src/styles
+import { useState } from 'react';
+import { loginUser } from '../api/auth';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: ''
+  });
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('token/', { username, password });
-      localStorage.setItem('token', response.data.access);
-      alert('Zalogowano pomyślnie!');
+      await loginUser(credentials);
+      alert('Zalogowano pomyślnie');
+      window.location.href = '/dashboard';
     } catch (error) {
-      console.error('Błąd logowania', error);
-      alert('Niepoprawne dane logowania');
+      alert('Błąd logowania');
     }
   };
 
   return (
-    <div className="login-container">
-      <h2 className="login-title">Logowanie</h2>
-      <form className="login-form" onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Nazwa użytkownika"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="login-input"
-        />
-        <input
-          type="password"
-          placeholder="Hasło"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="login-input"
-        />
-        <button type="submit" className="login-button">Zaloguj</button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="username" placeholder="Nazwa użytkownika" onChange={handleChange} />
+      <input type="password" name="password" placeholder="Hasło" onChange={handleChange} />
+      <button type="submit">Zaloguj</button>
+    </form>
   );
 };
 
