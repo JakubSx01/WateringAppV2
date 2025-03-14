@@ -1,8 +1,9 @@
 import axios from 'axios';
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Tworzymy instancję axios z bazowym URL i domyślnymi nagłówkami
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: `${API_URL}plants/`,
   headers: {
     'Content-Type': 'application/json'
   }

@@ -15,10 +15,9 @@ const Login = () => {
     e.preventDefault();
     try {
       await loginUser(credentials);
-      alert('Zalogowano pomyślnie');
       window.location.href = '/dashboard';
     } catch (error) {
-      alert('Błąd logowania');
+      alert('Nieprawidłowe dane logowania');
     }
   };
 

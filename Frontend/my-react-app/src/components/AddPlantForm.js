@@ -1,58 +1,66 @@
-import { useState } from 'react';
-import { addNewPlant, addPlantToUser } from '../api/auth';
+import { useState, useEffect } from 'react';
+import { fetchPlants, uploadPlant, addPlantToUser } from '../api/auth';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const AddPlantForm = ({ onPlantAdded }) => {
   const [plantData, setPlantData] = useState({
     name: '',
     species: '',
     water_amount_ml: '',
-    watering_frequency_days: ''
+    watering_frequency_days: '',
+    image: null
   });
+  const [plants, setPlants] = useState([]);
 
-  const [selectedPlantId, setSelectedPlantId] = useState(null);
+  useEffect(() => {
+    const loadPlants = async () => {
+      const response = await fetchPlants();
+      setPlants(response.data);
+    };
+    loadPlants();
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setPlantData({ ...plantData, [name]: value });
+    const { name, value, files } = e.target;
+    if (files) {
+      setPlantData({ ...plantData, image: files[0] });
+    } else {
+      setPlantData({ ...plantData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await addNewPlant(plantData);
-      alert('Roślina dodana do bazy!');
-      setPlantData({ name: '', species: '', water_amount_ml: '', watering_frequency_days: '' });
-      onPlantAdded(); // Odświeżenie listy roślin
-    } catch (error) {
-      console.error('Błąd dodawania rośliny:', error);
-    }
+    await uploadPlant(plantData);
+    onPlantAdded();
   };
 
-  const handleAddToUser = async () => {
-    if (!selectedPlantId) return;
-    try {
-      await addPlantToUser(selectedPlantId);
-      alert('Roślina przypisana do użytkownika!');
-      onPlantAdded(); // Odświeżenie listy roślin
-    } catch (error) {
-      console.error('Błąd przypisania rośliny:', error);
-    }
+  const handleAddToUser = async (plantId) => {
+    await addPlantToUser(plantId);
+    onPlantAdded();
   };
 
   return (
     <div>
-      <h3>Dodaj nową roślinę do bazy:</h3>
+      <h3>Dodaj nową roślinę:</h3>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="name" placeholder="Nazwa rośliny" value={plantData.name} onChange={handleChange} required />
-        <input type="text" name="species" placeholder="Gatunek" value={plantData.species} onChange={handleChange} />
-        <input type="number" name="water_amount_ml" placeholder="Ilość wody (ml)" value={plantData.water_amount_ml} onChange={handleChange} required />
-        <input type="number" name="watering_frequency_days" placeholder="Częstotliwość podlewania (dni)" value={plantData.watering_frequency_days} onChange={handleChange} required />
+        <input type="text" name="name" placeholder="Nazwa" onChange={handleChange} />
+        <input type="text" name="species" placeholder="Gatunek" onChange={handleChange} />
+        <input type="number" name="water_amount_ml" placeholder="Woda (ml)" onChange={handleChange} />
+        <input type="number" name="watering_frequency_days" placeholder="Częstotliwość (dni)" onChange={handleChange} />
+        <input type="file" name="image" onChange={handleChange} />
         <button type="submit">Dodaj roślinę</button>
       </form>
 
-      <h3>Przypisz roślinę do użytkownika:</h3>
-      <input type="number" placeholder="ID rośliny" value={selectedPlantId || ''} onChange={(e) => setSelectedPlantId(e.target.value)} />
-      <button onClick={handleAddToUser}>Przypisz roślinę</button>
+      <h3>Lista roślin z bazy danych:</h3>
+      <div style={{ maxHeight: '300px', overflowY: 'scroll' }}>
+        {plants.map((plant) => (
+          <div key={plant.id}>
+            <p>{plant.name} - {plant.species}</p>
+            {plant.image && <img src={`${API_URL}/${plant.image}`} alt={plant.name} width="50" />} 
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

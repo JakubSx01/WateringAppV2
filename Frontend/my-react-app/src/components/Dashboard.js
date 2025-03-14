@@ -13,6 +13,7 @@ const Dashboard = () => {
       setPlants(response.data);
     } catch {
       setIsLoggedIn(false);
+      window.location.href = '/login';
     }
   };
 
