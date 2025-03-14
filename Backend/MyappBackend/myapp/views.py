@@ -53,3 +53,9 @@ class WateringHistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return WateringHistory.objects.filter(user_plant__user=self.request.user)
+    
+def perform_create(self, serializer):
+    try:
+        serializer.save(user=self.request.user)
+    except Exception as e:
+        print("Błąd dodawania rośliny:", e)
