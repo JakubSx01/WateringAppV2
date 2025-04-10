@@ -1,246 +1,176 @@
-import { useEffect, useState } from 'react';
-import { fetchUserPlants, waterPlant, fetchPlants, addPlantToUser, uploadPlant } from '../api/auth';
+import React, { useEffect, useState } from 'react';
+import api from '../services/api';
+import '../styles/Dashboard.css';
 
 const Dashboard = () => {
   const [plants, setPlants] = useState([]);
-  const [allPlants, setAllPlants] = useState([]);
-  const [filteredPlants, setFilteredPlants] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showPlantList, setShowPlantList] = useState(false);
-  const [showAddPlantForm, setShowAddPlantForm] = useState(false);
-  const [newPlantData, setNewPlantData] = useState({
-    name: '',
-    species: '',
-    water_amount_ml: '',
-    watering_frequency_days: '',
-    image: null
-  });
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('access_token'));
-
-  const loadPlants = async () => {
-    try {
-      const response = await fetchUserPlants();
-      setPlants(response.data);
-    } catch {
-      setIsLoggedIn(false);
-      window.location.href = '/login';
-    }
-  };
-
-  const loadAllPlants = async () => {
-    const response = await fetchPlants();
-    setAllPlants(response.data);
-    setFilteredPlants(response.data);
-  };
-
-  const handleWaterPlant = async (plantId) => {
-    await waterPlant(plantId);
-    loadPlants();
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    window.location.href = '/login';
-  };
-
-  const handleAddPlantToUser = async (plantId) => {
-    await addPlantToUser(plantId);
-    loadPlants();
-    setShowPlantList(false);
-  };
-
-  const handleFilter = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    const filtered = allPlants.filter(plant => 
-      plant.name.toLowerCase().includes(query) || 
-      (plant.species && plant.species.toLowerCase().includes(query))
-    );
-    setFilteredPlants(filtered);
-  };
-
-  const handleNewPlantChange = (e) => {
-    const { name, value, files } = e.target;
-    setNewPlantData({ ...newPlantData, [name]: files ? files[0] : value });
-  };
-
-  const handleNewPlantSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    for (const key in newPlantData) {
-      formData.append(key, newPlantData[key]);
-    }
-    await uploadPlant(formData);
-    loadAllPlants();
-    setShowAddPlantForm(false);
-  };
+  const [availablePlants, setAvailablePlants] = useState([]);
+  const [selectedPlant, setSelectedPlant] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isLoggedIn) {
-      loadPlants();
-      loadAllPlants();
-    }
-  }, [isLoggedIn]);
+    // Pobieranie roślin użytkownika
+    const fetchUserPlants = async () => {
+      try {
+        const response = await api.get('user-plants/');
+        setPlants(response.data);
+      } catch (error) {
+        console.error('Błąd pobierania roślin użytkownika', error);
+        setError('Nie udało się pobrać Twoich roślin. Sprawdź połączenie z internetem.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Obliczanie statusu nawodnienia
-  const calculateWaterStatus = (plant) => {
-    const lastWatered = new Date(plant.last_watered);
-    const today = new Date();
-    const daysSinceWatered = Math.floor((today - lastWatered) / (1000 * 60 * 60 * 24));
-    const daysUntilWatering = plant.watering_frequency_days - daysSinceWatered;
+    // Pobieranie wszystkich dostępnych roślin
+    const fetchAvailablePlants = async () => {
+      try {
+        const response = await api.get('plants/');
+        setAvailablePlants(response.data);
+      } catch (error) {
+        console.error('Błąd pobierania dostępnych roślin', error);
+      }
+    };
+
+    fetchUserPlants();
+    fetchAvailablePlants();
+  }, []);
+
+  // Obliczanie dni do następnego podlania
+  const calculateDaysToWater = (lastWatered, wateringFrequency) => {
+    if (!lastWatered || !wateringFrequency) return 'Brak danych';
     
-    if (daysUntilWatering <= 0) {
-      return { status: 'critical', text: 'Podlej teraz!' };
-    } else if (daysUntilWatering <= 1) {
-      return { status: 'warning', text: 'Podlej wkrótce' };
-    } else {
-      return { status: 'good', text: `Za ${daysUntilWatering} dni` };
+    const lastWateredDate = new Date(lastWatered);
+    const today = new Date();
+    const daysSinceLastWatered = Math.floor((today - lastWateredDate) / (1000 * 60 * 60 * 24));
+    const daysToWater = wateringFrequency - daysSinceLastWatered;
+    
+    return daysToWater <= 0 ? 'Podlej teraz!' : `${daysToWater} dni`;
+  };
+
+  // Dodawanie nowej rośliny do półki użytkownika
+  const handleAddPlant = async () => {
+    if (!selectedPlant) {
+      setError('Wybierz roślinę z listy');
+      return;
+    }
+
+    try {
+      const response = await api.post('user-plants/', {
+        plant_id: selectedPlant,
+        last_watered: new Date().toISOString().split('T')[0] // Dzisiejsza data jako dzień ostatniego podlania
+      });
+      
+      // Dodaj nową roślinę do listy
+      setPlants([...plants, response.data]);
+      setSelectedPlant('');
+      setError('');
+    } catch (error) {
+      console.error('Błąd dodawania rośliny', error);
+      setError('Nie udało się dodać rośliny. Spróbuj ponownie.');
     }
   };
 
-  if (!isLoggedIn) {
-    return <h1>Musisz się zalogować, aby uzyskać dostęp do Dashboardu.</h1>;
-  }
+  // Podlewanie rośliny
+  const handleWaterPlant = async (plantId) => {
+    try {
+      await api.patch(`user-plants/${plantId}/water/`);
+      
+      // Aktualizacja daty ostatniego podlania w interfejsie
+      setPlants(plants.map(plant => 
+        plant.id === plantId 
+          ? {...plant, last_watered: new Date().toISOString().split('T')[0]}
+          : plant
+      ));
+    } catch (error) {
+      console.error('Błąd podczas podlewania', error);
+      setError('Nie udało się zaktualizować statusu podlewania.');
+    }
+  };
+
+  // Usuwanie rośliny z półki użytkownika
+  const handleRemovePlant = async (plantId) => {
+    try {
+      await api.delete(`user-plants/${plantId}/`);
+      setPlants(plants.filter(plant => plant.id !== plantId));
+    } catch (error) {
+      console.error('Błąd usuwania rośliny', error);
+      setError('Nie udało się usunąć rośliny.');
+    }
+  };
+
+  if (loading) return <div className="loading">Ładowanie danych...</div>;
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h1>Twoje Rośliny</h1>
-        <div className="header-buttons">
-          <button 
-            className="add-plant-button" 
-            onClick={() => setShowPlantList(!showPlantList)}
+      <h2 className="dashboard-title">Twoja Półka z Roślinami</h2>
+      
+      {error && <div className="error-message">{error}</div>}
+      
+      <div className="add-plant-section">
+        <h3>Dodaj nową roślinę</h3>
+        <div className="add-plant-form">
+          <select 
+            value={selectedPlant} 
+            onChange={(e) => setSelectedPlant(e.target.value)}
+            className="plant-select"
           >
-            {showPlantList ? 'Zamknij listę' : 'Dodaj roślinę'}
-          </button>
-          <button className="logout-button" onClick={handleLogout}>Wyloguj</button>
+            <option value="">Wybierz roślinę</option>
+            {availablePlants.map(plant => (
+              <option key={plant.id} value={plant.id}>
+                {plant.name}
+              </option>
+            ))}
+          </select>
+          <button onClick={handleAddPlant} className="add-button">Dodaj do mojej półki</button>
         </div>
-      </header>
-
-      <div className="plants-grid">
-        {plants.map(plant => {
-          const waterStatus = calculateWaterStatus(plant);
-          return (
+      </div>
+      
+      {plants.length === 0 ? (
+        <p className="no-plants">Brak roślin, dodaj nowe!</p>
+      ) : (
+        <div className="plants-grid">
+          {plants.map(plant => (
             <div key={plant.id} className="plant-card">
-              <div className="plant-image">
-                {plant.image_url ? (
-                  <img src={plant.image_url} alt={plant.name} />
-                ) : (
-                  <div className="placeholder-image">🌱</div>
-                )}
-              </div>
+              {plant.plant?.image && (
+                <img 
+                  src={plant.plant.image} 
+                  alt={plant.plant.name} 
+                  className="plant-image"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/placeholder-plant.jpg'; // Zastępczy obraz
+                  }}
+                />
+              )}
               <div className="plant-info">
-                <h3>{plant.name}</h3>
-                {plant.species && <p className="plant-species">{plant.species}</p>}
-                <div className={`water-status water-${waterStatus.status}`}>
-                  <span className="water-icon">💧</span>
-                  <span>{waterStatus.text}</span>
-                </div>
-                <div className="plant-details">
-                  <p>Woda: {plant.water_amount_ml} ml</p>
-                  <p>Częstotliwość: co {plant.watering_frequency_days} dni</p>
-                </div>
+                <h3>{plant.plant?.name || 'Nieznana roślina'}</h3>
+                <p><strong>Podlewanie:</strong> {plant.plant?.watering_frequency 
+                  ? `Co ${plant.plant.watering_frequency} dni` 
+                  : 'Brak danych'}</p>
+                <p><strong>Ilość wody:</strong> {plant.plant?.water_amount || 'Brak danych'}</p>
+                <p><strong>Ostatnie podlanie:</strong> {plant.last_watered || 'Brak danych'}</p>
+                <p className="days-to-water">
+                  <strong>Następne podlanie za:</strong> {calculateDaysToWater(plant.last_watered, plant.plant?.watering_frequency)}
+                </p>
+              </div>
+              <div className="plant-actions">
                 <button 
-                  className="water-button" 
-                  onClick={() => handleWaterPlant(plant.id)}
+                  onClick={() => handleWaterPlant(plant.id)} 
+                  className="water-button"
                 >
-                  Podlej roślinę
+                  Podlej teraz
+                </button>
+                <button 
+                  onClick={() => handleRemovePlant(plant.id)} 
+                  className="remove-button"
+                >
+                  Usuń roślinę
                 </button>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {plants.length === 0 && (
-        <div className="empty-state">
-          <p>Nie masz jeszcze żadnych roślin. Dodaj swoją pierwszą roślinę!</p>
-        </div>
-      )}
-
-      {/* Modal z listą wszystkich roślin */}
-      {showPlantList && (
-        <div className="plant-list-modal">
-          <div className="plant-list-content">
-            <div className="plant-list-header">
-              <h2>Wybierz roślinę</h2>
-              <input
-                type="text"
-                placeholder="Wyszukaj po nazwie lub gatunku"
-                value={searchQuery}
-                onChange={handleFilter}
-                className="search-input"
-              />
-              <button className="close-modal" onClick={() => setShowPlantList(false)}>×</button>
-            </div>
-            
-            <div className="plant-list-container">
-              {filteredPlants.length > 0 ? (
-                <div className="plant-list">
-                  {filteredPlants.map(plant => (
-                    <div key={plant.id} className="plant-list-item">
-                      <div className="plant-list-info">
-                        {plant.image_url && <img src={plant.image_url} alt={plant.name} className="plant-thumbnail" />}
-                        <div className="plant-list-details">
-                          <h3>{plant.name}</h3>
-                          {plant.species && <p>{plant.species}</p>}
-                          <div className="plant-properties">
-                            <span>Woda: {plant.water_amount_ml} ml</span>
-                            <span>Podlewanie: co {plant.watering_frequency_days} dni</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button 
-                        className="add-to-shelf-button" 
-                        onClick={() => handleAddPlantToUser(plant.id)}
-                      >
-                        Dodaj do półki
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="no-results">Brak wyników wyszukiwania</p>
-              )}
-            </div>
-            
-            <div className="plant-list-footer">
-              <button 
-                className="add-new-plant" 
-                onClick={() => {
-                  setShowAddPlantForm(!showAddPlantForm);
-                }}
-              >
-                {showAddPlantForm ? 'Anuluj' : 'Dodaj nową roślinę do bazy'}
-              </button>
-            </div>
-            
-            {showAddPlantForm && (
-              <form className="add-plant-form" onSubmit={handleNewPlantSubmit}>
-                <div className="form-group">
-                  <label>Nazwa rośliny</label>
-                  <input type="text" name="name" onChange={handleNewPlantChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Gatunek</label>
-                  <input type="text" name="species" onChange={handleNewPlantChange} />
-                </div>
-                <div className="form-group">
-                  <label>Ilość wody (ml)</label>
-                  <input type="number" name="water_amount_ml" onChange={handleNewPlantChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Częstotliwość podlewania (dni)</label>
-                  <input type="number" name="watering_frequency_days" onChange={handleNewPlantChange} required />
-                </div>
-                <div className="form-group">
-                  <label>Zdjęcie</label>
-                  <input type="file" name="image" onChange={handleNewPlantChange} />
-                </div>
-                <button type="submit" className="submit-button">Dodaj do bazy</button>
-              </form>
-            )}
-          </div>
+          ))}
         </div>
       )}
     </div>
