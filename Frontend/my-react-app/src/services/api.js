@@ -1,7 +1,6 @@
-// Frontend/my-react-app/src/services/api.js
 import axios from 'axios';
 
-// Tworzymy instancję axios z bazowym URL i domyślnymi nagłówkami
+// Create axios instance with base URL and default headers
 const api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/',
   headers: {
@@ -9,7 +8,7 @@ const api = axios.create({
   }
 });
 
-// Interceptor do automatycznego dołączania tokena JWT, jeśli jest zapisany w localStorage
+// Interceptor for automatically adding JWT token if stored in localStorage
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
@@ -19,6 +18,19 @@ api.interceptors.request.use(
     return config;
   },
   error => Promise.reject(error)
+);
+
+// Handle token expiration
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // Optional: automatic logout on token expiration
+      // localStorage.removeItem('token');
+      // window.location = '/login';
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
