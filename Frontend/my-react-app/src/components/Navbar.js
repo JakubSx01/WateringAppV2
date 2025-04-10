@@ -1,105 +1,99 @@
+// Frontend/my-react-app/src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
 
-  // Sprawdzenie stanu logowania przy montowaniu komponentu
   useEffect(() => {
+    // Sprawdzanie, czy użytkownik jest zalogowany
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
-  }, []);
+  }, [location]); // Sprawdzaj przy zmianie lokalizacji
 
-  // Nasłuchiwanie na zmiany w localStorage (logowanie/wylogowanie)
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const token = localStorage.getItem('token');
-      setIsLoggedIn(!!token);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Dodajemy własne zdarzenie dla zmian w localStorage z tego samego okna
-    window.addEventListener('loginStatusChange', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('loginStatusChange', handleStorageChange);
-    };
-  }, []);
-
-  // Obsługa wylogowania
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
-    
-    // Odpalamy zdarzenie informujące o zmianie statusu logowania
-    window.dispatchEvent(new Event('loginStatusChange'));
-    
-    // Przekierowanie na stronę główną
+    setDropdownOpen(false);
     navigate('/');
-    
-    // Zamknięcie menu po wylogowaniu na urządzeniach mobilnych
-    setIsMenuOpen(false);
   };
 
-  // Przełączanie menu mobilnego
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  // Zamknięcie menu po kliknięciu w link (dla urządzeń mobilnych)
-  const closeMenu = () => {
-    if (isMenuOpen) setIsMenuOpen(false);
+    setMenuOpen(!menuOpen);
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo" onClick={closeMenu}>
+        <Link to="/" className="logo">
+          <span className="logo-icon">🌱</span>
           PlantCare
-          <i className="fas fa-leaf"></i> {/* Możesz użyć Font Awesome lub innego zestawu ikon */}
         </Link>
-        
-        {/* Przycisk menu hamburger (widoczny tylko na urządzeniach mobilnych) */}
-        <div className="menu-icon" onClick={toggleMenu}>
-          <i className={isMenuOpen ? 'fas fa-times' : 'fas fa-bars'}></i>
-        </div>
-        
-        {/* Lista elementów menu */}
-        <ul className={isMenuOpen ? 'nav-menu active' : 'nav-menu'}>
-          <li className="nav-item">
-            <Link to="/" className="nav-link" onClick={closeMenu}>
+
+        <button className="hamburger" onClick={toggleMenu}>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+        </button>
+
+        <ul className={`nav-links ${menuOpen ? 'show' : ''}`}>
+          <li>
+            <Link 
+              to="/" 
+              className={`nav-link ${location.pathname === '/' ? 'active-link' : ''}`}
+            >
               Strona główna
             </Link>
           </li>
           
+          {isLoggedIn && (
+            <li>
+              <Link 
+                to="/dashboard" 
+                className={`nav-link ${location.pathname === '/dashboard' ? 'active-link' : ''}`}
+              >
+                Moje rośliny
+              </Link>
+            </li>
+          )}
+          
           {isLoggedIn ? (
-            <>
-              <li className="nav-item">
-                <Link to="/dashboard" className="nav-link" onClick={closeMenu}>
-                  Moje rośliny
-                </Link>
-              </li>
-              <li className="nav-item">
-                <button className="nav-link logout-button" onClick={handleLogout}>
-                  Wyloguj
+            <li className="user-menu">
+              <button className="user-button" onClick={toggleDropdown}>
+                <span className="user-icon">👤</span>
+                Moje konto
+              </button>
+              <div className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
+                <button className="logout-button" onClick={handleLogout}>
+                  Wyloguj się
                 </button>
-              </li>
-            </>
+              </div>
+            </li>
           ) : (
             <>
-              <li className="nav-item">
-                <Link to="/login" className="nav-link" onClick={closeMenu}>
-                  Logowanie
+              <li>
+                <Link 
+                  to="/login" 
+                  className={`nav-link ${location.pathname === '/login' ? 'active-link' : ''}`}
+                >
+                  Zaloguj się
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link to="/register" className="nav-link register-button" onClick={closeMenu}>
-                  Rejestracja
+              <li>
+                <Link 
+                  to="/register" 
+                  className={`nav-link ${location.pathname === '/register' ? 'active-link' : ''}`}
+                >
+                  Zarejestruj się
                 </Link>
               </li>
             </>

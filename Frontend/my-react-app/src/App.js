@@ -1,16 +1,27 @@
+// Frontend/my-react-app/src/App.js
+import './App.css';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './pages/Home';
 import Login from './pages/Login';
-import Dashboard from './components/Dashboard';
-import Register from './components/Register';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Navbar from './components/Navbar';
 
-const App = () => (
-  <Router>
-    <Routes>
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-    </Routes>
-  </Router>
-);
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <div className="app-container">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
 
 export default App;

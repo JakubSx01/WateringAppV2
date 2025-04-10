@@ -1,9 +1,9 @@
+// Frontend/my-react-app/src/services/api.js
 import axios from 'axios';
-const API_URL = process.env.REACT_APP_API_URL;
 
 // Tworzymy instancję axios z bazowym URL i domyślnymi nagłówkami
 const api = axios.create({
-  baseURL: `${API_URL}plants/`,
+  baseURL: 'http://127.0.0.1:8000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
