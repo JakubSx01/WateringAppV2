@@ -14,18 +14,22 @@
   }
   
   .plant-card-image-container {
-    width: 100%;
-    height: 200px; /* Stała wysokość dla obrazka */
-    overflow: hidden;
+    width: 100%; /* Szerokość kontenera to 100% szerokości karty */
+    height: 200px; /* Ustaw stałą wysokość dla obszaru obrazka. Możesz dostosować tę wartość. */
+    overflow: hidden; /* Ważne: Ukrywa części obrazka, które wychodzą poza kontener, jeśli używasz 'cover' */
+    position: relative; /* Czasem przydatne dla pozycjonowania elementów wewnątrz */
+    background-color: #f0f0f0; /* Domyślne tło, gdyby obrazek się nie ładował */
   }
   
   .plant-card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Skaluje obrazek, aby wypełnił kontener, zachowując proporcje */
-    display: block;
+    display: block; /* Usuwa potencjalny mały odstęp pod obrazkiem */
+    width: 100%;    /* Obrazek próbuje wypełnić 100% szerokości kontenera */
+    height: 100%;   /* Obrazek próbuje wypełnić 100% wysokości kontenera */
+    /* Kluczowa właściwość: Skaluje obrazek, aby zachować proporcje i wypełnić
+       cały kontener. Może przyciąć boki lub górę/dół, jeśli proporcje się nie zgadzają. */
+    object-fit: cover;
   }
-  
+
   .plant-card-content {
     padding: 15px;
     flex-grow: 1; /* Pozwala tej części rosnąć, aby wypełnić przestrzeń */

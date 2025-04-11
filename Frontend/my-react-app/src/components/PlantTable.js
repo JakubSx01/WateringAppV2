@@ -19,11 +19,13 @@ const formatDate = (dateString) => {
 };
 
 // Funkcja do budowania URL obrazka
-const getImageUrl = (imagePath) => {
-    if (!imagePath) return '/placeholder-plant.png';
-    const baseUrl = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000';
-    // Łączymy bezpośrednio, bo backend zwraca ścieżkę z /media/
-    return `${baseUrl}${imagePath}`;
+const getImageUrl = (imageUrlFromApi) => {
+    if (!imageUrlFromApi) {
+        // Zwróć ścieżkę do placeholdera w folderze /public
+        return '/placeholder-plant.png';
+    }
+    // API zwraca już pełny, poprawny URL, więc po prostu go zwracamy
+    return imageUrlFromApi;
 };
 
 const PlantTable = ({ plants, onWater }) => {
