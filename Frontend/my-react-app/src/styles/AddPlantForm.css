@@ -1,0 +1,56 @@
+/* Frontend/my-react-app/src/styles/AddPlantForm.css */
+.add-plant-form-container {
+    margin: 30px 0;
+    padding: 25px;
+    background-color: #fdfdfd;
+    border: 1px dashed #ccc; /* Dashed border to indicate optional section */
+    border-radius: 8px;
+  }
+  
+  .add-plant-form-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #34495e;
+    text-align: center;
+    font-size: 1.3rem;
+  }
+  
+  .add-plant-form {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column by default */
+    gap: 15px;
+  }
+  
+  /* Use grid for two columns on wider screens */
+  @media (min-width: 600px) {
+    .add-plant-form {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px; /* Slightly larger gap */
+    }
+  
+    /* Make submit button span both columns */
+    .add-plant-form button[type="submit"] {
+      grid-column: 1 / -1;
+      margin-top: 10px; /* Add some space above the button */
+    }
+  }
+  
+  /* Inherit form-group, form-label, form-input styles from App.css */
+  /* Add specific styles if needed */
+  .add-plant-form .form-input[type="file"] {
+    padding: 8px; /* Adjust padding for file input */
+  }
+  
+  .add-plant-form button[type="submit"] {
+    width: auto; /* Override potential 100% width from App.css */
+    padding: 12px 25px;
+    justify-self: center; /* Center button in the grid cell/span */
+  }
+  
+  .add-plant-form label {
+      font-weight: 500; /* Make labels slightly bolder */
+  }
+  
+  .add-plant-form .form-group {
+      margin-bottom: 0; /* Remove default margin as grid gap handles spacing */
+  }

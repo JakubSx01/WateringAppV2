@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import date, timedelta
 
-# Model globalnych roślin
 class Plant(models.Model):
     name = models.CharField(max_length=100, unique=True)
     species = models.CharField(max_length=100, blank=True, null=True)
@@ -10,18 +9,55 @@ class Plant(models.Model):
     water_amount_ml = models.PositiveIntegerField(help_text="Optymalna ilość wody w ml")
     watering_frequency_days = models.PositiveIntegerField(help_text="Optymalna częstotliwość podlewania (dni)")
 
+    # --- Zaktualizowane Choices dla Sunlight ---
+    SUNLIGHT_FULL_SUN = 'full_sun'
+    SUNLIGHT_PARTIAL_SHADE = 'partial_shade'
+    SUNLIGHT_BRIGHT_INDIRECT = 'bright_indirect' # Nowa opcja dla "Jasne rozproszone"
+    SUNLIGHT_SHADE = 'shade'
     SUNLIGHT_CHOICES = [
-        ('full_sun', 'Pełne słońce'),
-        ('partial_shade', 'Półcień'),
-        ('shade', 'Cień'),
+        (SUNLIGHT_FULL_SUN, 'Pełne słońce'),      # Klucz: full_sun, Etykieta: Pełne słońce
+        (SUNLIGHT_PARTIAL_SHADE, 'Półcień'),     # Klucz: partial_shade, Etykieta: Półcień
+        (SUNLIGHT_BRIGHT_INDIRECT, 'Jasne rozproszone'), # Klucz: bright_indirect, Etykieta: Jasne rozproszone
+        (SUNLIGHT_SHADE, 'Cień'),                # Klucz: shade, Etykieta: Cień
     ]
-    sunlight = models.CharField(max_length=50, choices=SUNLIGHT_CHOICES, blank=True, null=True)
-    soil_type = models.CharField(max_length=100, blank=True, null=True)
+    sunlight = models.CharField(
+        max_length=50,
+        choices=SUNLIGHT_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Wymagania dotyczące światła" # Dodany help_text
+    )
+    # --- Koniec aktualizacji Sunlight ---
+
+    # --- Dodane Choices dla Soil Type ---
+    SOIL_UNIVERSAL = 'universal'
+    SOIL_SANDY = 'sandy'            # Dla "Piaszczysta"
+    SOIL_PEAT = 'peat'              # Dla "Torfowa"
+    SOIL_CLAY = 'clay'              # Dla "Gliniasta"
+    SOIL_LOAMY = 'loamy'            # Opcjonalnie: "Próchnicza"
+    SOIL_CHALKY = 'chalky'          # Opcjonalnie: "Wapienna"
+    SOIL_TYPE_CHOICES = [
+        (SOIL_UNIVERSAL, 'Uniwersalna'), # Klucz: universal, Etykieta: Uniwersalna
+        (SOIL_SANDY, 'Piaszczysta'),     # Klucz: sandy, Etykieta: Piaszczysta
+        (SOIL_PEAT, 'Torfowa'),          # Klucz: peat, Etykieta: Torfowa
+        (SOIL_CLAY, 'Gliniasta'),        # Klucz: clay, Etykieta: Gliniasta
+        (SOIL_LOAMY, 'Próchnicza'),      # Możesz dodać więcej opcji
+        (SOIL_CHALKY, 'Wapienna'),
+        # Można dodać też opcję 'other' jeśli potrzeba
+    ]
+    soil_type = models.CharField(
+        max_length=100,
+        choices=SOIL_TYPE_CHOICES, # Użyj choices
+        blank=True,
+        null=True,
+        help_text="Preferowany typ gleby" # Dodany help_text
+    )
+    # --- Koniec aktualizacji Soil Type ---
+
     preferred_temperature = models.IntegerField(blank=True, null=True, help_text="Temperatura °C")
 
     def __str__(self):
         return self.name
-
 
 # Model roślin użytkownika
 class UserPlant(models.Model):

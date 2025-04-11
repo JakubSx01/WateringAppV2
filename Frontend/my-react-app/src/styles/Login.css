@@ -52,3 +52,65 @@
     background-color: #21a1f1;
   }
   
+  .login-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .login-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  /* Make input width consistent */
+  .login-input {
+      width: 100%; /* Fill container */
+      box-sizing: border-box; /* Include padding in width */
+       margin-bottom: 0; /* Remove margin if using form-group */
+  }
+  
+  .login-button {
+      width: 100%; /* Make button full width */
+      margin-top: 10px; /* Add space above button */
+  }
+  
+  .login-button:disabled {
+    background-color: #a1d9ed; /* Lighter blue when disabled */
+    cursor: not-allowed;
+  }
+  
+  
+  /* Error message styling */
+  .error-message.login-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 20px; /* Space below error */
+    border: 1px solid #f5c6cb;
+    width: 100%; /* Match form width */
+    max-width: 300px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  
+  
+  /* Register link styling */
+  .register-link {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  .register-link a {
+    color: #3498db; /* Use a theme color */
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .register-link a:hover {
+    text-decoration: underline;
+  }

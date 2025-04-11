@@ -5,6 +5,141 @@
   margin: 0 auto;
 }
 
+.dashboard-section {
+  background-color: #fff;
+  padding: 20px 25px; /* More padding */
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Optional: Different background for add section if desired */
+.add-plant-definition-section {
+  background-color: #f9fafb; /* Slightly different background */
+}
+
+.section-title {
+    margin-top: 0;
+    margin-bottom: 25px; /* More space below title */
+    color: #111827; /* Darker title */
+    font-size: 1.4rem; /* Slightly smaller */
+    font-weight: 600;
+    border-bottom: 1px solid #e5e7eb; /* Lighter border */
+    padding-bottom: 12px;
+}
+
+/* Ensure error messages within sections look okay */
+.dashboard-section .error-message {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.dashboard-section .loading {
+    padding: 20px 0; /* Adjust padding */
+}
+
+/* --- Add specific styles for Login error --- */
+.login-error {
+    width: 100%;
+    max-width: 300px; /* Match form width */
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+/* --- Add Register Link styles to Login.css --- */
+.register-link {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.register-link a {
+  color: #3498db; /* Use a theme color */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
+.available-plants-add-section {
+   /* Specific styles if needed */
+   background-color: #f9f9f9; /* Slightly different background */
+}
+
+.section-title {
+   margin-top: 0;
+   margin-bottom: 20px;
+   color: #2c3e50;
+   font-size: 1.5rem;
+   border-bottom: 2px solid #ecf0f1;
+   padding-bottom: 10px;
+}
+
+/* Sekcja przełączania formularza */
+.toggle-form-section {
+  text-align: center; /* Wyśrodkuj przycisk */
+  margin-top: 20px; /* Odstęp nad przyciskiem */
+  margin-bottom: 20px; /* Odstęp pod przyciskiem, jeśli formularz jest ukryty */
+}
+
+.toggle-add-form-button {
+  /* Styl przycisku - użyj istniejących klas 'button' i 'button-secondary' */
+  padding: 10px 20px;
+}
+
+.section-separator {
+ border: 0;
+ height: 1px;
+ background-color: #e0e0e0;
+ margin: 30px 0; /* Space around separator */
+}
+
+/* Wrapper dla formularza, gdy jest widoczny */
+.add-plant-form-wrapper {
+  margin-top: 20px; /* Odstęp nad formularzem, gdy jest widoczny */
+   /* Możesz dodać tu tło lub obramowanie, jeśli chcesz wyraźnie oddzielić formularz */
+   /* border-top: 1px solid #eee; */
+   /* padding-top: 20px; */
+}
+
+/* Upewnij się, że separator jest widoczny */
+.section-separator {
+border: 0;
+height: 1px;
+background-color: #e0e0e0;
+margin: 30px 0; /* Odstępy wokół separatora */
+}
+
+
+/* Adjustments for row click */
+.plant-table-row {
+   cursor: pointer; /* Indicate row is clickable */
+   transition: background-color 0.2s ease;
+}
+
+.plant-table-row:hover {
+   background-color: #f1f5f8 !important; /* Ensure hover overrides other styles */
+}
+
+/* Adjustments for card click */
+.plant-card {
+   cursor: pointer; /* Indicate card is clickable */
+}
+
+.plant-card:hover {
+   box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* Enhance hover effect */
+   transform: translateY(-3px);
+}
+
+.details-button-card,
+.details-button-table {
+   margin-top: 10px;
+   font-size: 0.9rem;
+   padding: 6px 12px;
+}
 .user-plants-section,
 .available-plants-section {
   margin-bottom: 40px;

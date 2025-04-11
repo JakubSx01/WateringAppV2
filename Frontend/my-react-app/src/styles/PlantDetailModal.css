@@ -1,0 +1,138 @@
+/* Frontend/my-react-app/src/styles/PlantDetailModal.css */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050; /* Ensure it's above navbar */
+    padding: 20px; /* Padding for smaller screens */
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    width: 100%;
+    max-width: 650px; /* Max width */
+    max-height: 90vh; /* Max height */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    animation: modal-fade-in 0.3s ease-out;
+  }
+  
+  .modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+  }
+  
+  .modal-close-button:hover {
+    color: #333;
+  }
+  
+  .modal-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    text-align: center;
+    font-size: 1.8rem;
+  }
+  
+  .modal-body {
+    display: flex;
+    flex-direction: column; /* Stack image and details vertically on small screens */
+    gap: 20px;
+  }
+  
+  /* Layout for wider screens */
+  @media (min-width: 576px) {
+    .modal-body {
+      flex-direction: row; /* Side-by-side layout */
+      gap: 30px;
+    }
+  }
+  
+  .modal-image-container {
+    flex-shrink: 0;
+    text-align: center; /* Center image */
+  }
+  
+  @media (min-width: 576px) {
+    .modal-image-container {
+       width: 200px; /* Fixed width for image column */
+       text-align: left;
+    }
+  }
+  
+  
+  .modal-image {
+    max-width: 100%; /* Ensure image is responsive */
+    height: auto;
+    max-height: 250px; /* Limit image height */
+    object-fit: cover;
+    border-radius: 6px;
+    display: block; /* Remove extra space below image */
+    margin: 0 auto 15px auto; /* Center horizontally and add bottom margin */
+  }
+  
+  @media (min-width: 576px) {
+      .modal-image {
+          margin: 0; /* Reset margin for side-by-side layout */
+           max-height: 300px;
+      }
+  }
+  
+  
+  .modal-details {
+    flex-grow: 1;
+  }
+  
+  .modal-details p {
+    margin: 8px 0;
+    color: #34495e;
+    line-height: 1.5;
+  }
+  
+  .modal-details p strong {
+    color: #2c3e50;
+    margin-right: 5px;
+    display: inline-block; /* Better spacing */
+    min-width: 140px; /* Align values */
+  }
+  
+  .modal-details hr {
+    border: 0;
+    height: 1px;
+    background-color: #eee;
+    margin: 15px 0;
+  }
+  
+  .modal-details .bold {
+    font-weight: bold;
+    color: #27ae60; /* Highlight next watering date */
+  }
+  
+  /* Fade-in animation */
+  @keyframes modal-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

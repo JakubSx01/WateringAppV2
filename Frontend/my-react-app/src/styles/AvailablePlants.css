@@ -1,0 +1,122 @@
+/* Frontend/my-react-app/src/styles/AvailablePlants.css */
+.available-plants-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .available-plants-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #34495e;
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  
+  .filter-input {
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Include padding in width */
+  }
+  
+  .filter-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  }
+  
+  .available-plants-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px; /* Limit height and allow scrolling */
+    overflow-y: auto;
+  }
+  
+  .available-plant-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+  }
+  
+  .available-plant-item:last-child {
+    border-bottom: none;
+  }
+  
+  .available-plant-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .available-plant-image {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-right: 15px;
+    flex-shrink: 0; /* Prevent image from shrinking */
+  }
+  
+  .available-plant-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .available-plant-name {
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  
+  .available-plant-species {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+  
+  .add-to-collection-button {
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    margin-left: 15px;
+    flex-shrink: 0; /* Prevent button from shrinking */
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  .add-to-collection-button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  .available-plant-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+    cursor: pointer; /* <-- Dodaj wskaźnik myszy */
+  }
+  
+  .available-plant-item:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .add-to-collection-button {
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      margin-left: 15px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      cursor: pointer; /* <-- Upewnij się, że przycisk też ma kursor */
+  }
+  
+  .add-to-collection-button:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed; /* <-- Kursor dla nieaktywnego przycisku */
+      opacity: 0.7;
+  }

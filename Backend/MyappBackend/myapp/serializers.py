@@ -26,7 +26,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class PlantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plant
-        fields = ['id', 'name', 'species', 'image', 'water_amount_ml', 'watering_frequency_days']
+        # Upewnij się, że WSZYSTKIE te pola tu są
+        fields = [
+            'id',
+            'name',
+            'species',
+            'image',
+            'water_amount_ml',
+            'watering_frequency_days',
+            'sunlight',                 
+            'soil_type',                
+            'preferred_temperature'     
+        ]
 
 # Rośliny przypisane do użytkownika
 class UserPlantSerializer(serializers.ModelSerializer):

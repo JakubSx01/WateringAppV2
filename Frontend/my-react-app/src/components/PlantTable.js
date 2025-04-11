@@ -1,37 +1,26 @@
 import React from 'react';
-import '../styles/PlantTable.css'; // Utworzymy ten plik CSS później
+import '../styles/PlantTable.css';
+import { formatDate } from '../utils/dateUtils';
+import { getImageUrl } from '../utils/imageUtils';
 
-// Prosta funkcja do formatowania daty
-const formatDate = (dateString) => {
-  if (!dateString) return 'Brak danych';
-  try {
-    const date = new Date(dateString);
-    // Sprawdź, czy data jest poprawna
-    if (isNaN(date.getTime())) {
-        return 'Nieprawidłowa data';
-    }
-    // Użyj toLocaleDateString dla lokalnego formatu daty
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch (error) {
-    console.error("Error formatting date:", dateString, error);
-    return 'Błąd daty';
-  }
-};
-
-// Funkcja do budowania URL obrazka
-const getImageUrl = (imageUrlFromApi) => {
-    if (!imageUrlFromApi) {
-        // Zwróć ścieżkę do placeholdera w folderze /public
-        return '/placeholder-plant.png';
-    }
-    // API zwraca już pełny, poprawny URL, więc po prostu go zwracamy
-    return imageUrlFromApi;
-};
-
-const PlantTable = ({ plants, onWater }) => {
+// Add onShowDetails prop
+const PlantTable = ({ plants, onWater, onShowDetails }) => {
   if (!plants || plants.length === 0) {
     return <p>Nie masz jeszcze żadnych roślin.</p>;
   }
+
+  // Prevent default action or bubbling if needed when clicking button
+   const handleButtonClick = (e, userPlantId) => {
+    e.stopPropagation(); // Stop event from bubbling up to the row
+    onWater(userPlantId);
+  };
+
+  // Function to call onShowDetails when row is clicked
+  const handleRowClick = (userPlant) => {
+    if (onShowDetails) {
+      onShowDetails(userPlant);
+    }
+  };
 
   return (
     <div className="table-container">
@@ -48,13 +37,14 @@ const PlantTable = ({ plants, onWater }) => {
         </thead>
         <tbody>
           {plants.map((userPlant) => (
-            <tr key={userPlant.id}>
+            // Add onClick to the table row
+            <tr key={userPlant.id} onClick={() => handleRowClick(userPlant)} className="plant-table-row">
               <td>
                 <img
                   src={getImageUrl(userPlant.plant.image)}
                   alt={userPlant.plant.name}
                   className="plant-table-image"
-                  onError={(e) => { e.target.onerror = null; e.target.src='/placeholder-plant.png'; }} // Fallback w razie błędu ładowania
+                  onError={(e) => { e.target.onerror = null; e.target.src='/placeholder-plant.png'; }}
                 />
               </td>
               <td>{userPlant.plant.name}</td>
@@ -62,9 +52,12 @@ const PlantTable = ({ plants, onWater }) => {
               <td>{formatDate(userPlant.last_watered_at)}</td>
               <td>{formatDate(userPlant.next_watering_date)}</td>
               <td>
-                <button onClick={() => onWater(userPlant.id)} className="button water-button-table">
+                {/* Add stopPropagation to button's onClick */}
+                <button onClick={(e) => handleButtonClick(e, userPlant.id)} className="button water-button-table">
                   Podlej
                 </button>
+                 {/* Optional: Add a dedicated "Details" button/link */}
+                 {/* <button onClick={(e) => { e.stopPropagation(); onShowDetails(userPlant); }} className="button button-secondary details-button-table">Szczegóły</button> */}
               </td>
             </tr>
           ))}
