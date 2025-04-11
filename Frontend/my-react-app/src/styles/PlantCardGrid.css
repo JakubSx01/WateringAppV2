@@ -1,0 +1,15 @@
+/* Frontend/my-react-app/src/styles/PlantCardGrid.css */
+.plants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Responsywna siatka */
+    gap: 25px; /* Odstępy między kartami */
+    padding: 20px 0; /* Dodatkowy padding dla siatki */
+  }
+  
+  /* Dodatkowe style dla responsywności, jeśli potrzeba */
+  @media (max-width: 600px) {
+    .plants-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+  }

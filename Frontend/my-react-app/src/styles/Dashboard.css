@@ -94,3 +94,106 @@ h2 {
   border-radius: 4px;
   margin: 20px 0;
 }
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Umożliwia zawijanie na mniejszych ekranach */
+}
+
+.dashboard-header h2 {
+  margin: 0 0 10px 0; /* Margines dolny dla tytułu na małych ekranach */
+  flex-basis: 100%; /* Tytuł zajmuje całą szerokość na początku */
+  text-align: center; /* Wyśrodkuj tytuł */
+}
+
+.view-toggle-buttons {
+  display: flex;
+  gap: 10px; /* Odstęp między przyciskami */
+  margin-bottom: 10px; /* Margines, gdy przyciski są pod tytułem */
+  flex-grow: 1; /* Pozwól przyciskom zająć dostępną przestrzeń */
+  justify-content: center; /* Wyśrodkuj przyciski */
+}
+
+.view-button {
+  padding: 8px 16px;
+  background-color: #ecf0f1;
+  color: #34495e;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.view-button:hover:not(.active) {
+  background-color: #dfe6e9;
+}
+
+.view-button.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+  font-weight: bold;
+}
+
+.logout-button-dashboard {
+  background-color: #e74c3c;
+  color: white;
+  padding: 8px 16px;
+   margin-left: auto; /* Przesuń przycisk wylogowania na prawo */
+}
+
+.logout-button-dashboard:hover {
+  background-color: #c0392b;
+}
+
+.plants-section {
+  margin-top: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+.error-message {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+
+/* Responsywność dla nagłówka */
+@media (min-width: 768px) {
+  .dashboard-header h2 {
+    flex-basis: auto; /* Przywróć domyślne zachowanie na większych ekranach */
+    text-align: left; /* Wyrównaj do lewej */
+    margin-right: 20px; /* Dodaj odstęp od przycisków */
+    margin-bottom: 0; /* Usuń margines dolny */
+  }
+   .view-toggle-buttons {
+     justify-content: flex-start; /* Wyrównaj przyciski do lewej */
+     margin-bottom: 0;
+   }
+    .logout-button-dashboard {
+      margin-left: auto; /* Utrzymaj przycisk wylogowania po prawej */
+    }
+}
+
+/* Dodatkowe style dla Dashboard.css */
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.user-plants-section, /* Możesz usunąć te, jeśli nie są już używane */
+.available-plants-section {
+  margin-bottom: 40px;
+}

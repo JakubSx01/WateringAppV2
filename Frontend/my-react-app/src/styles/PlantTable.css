@@ -1,0 +1,67 @@
+/* Frontend/my-react-app/src/styles/PlantTable.css */
+.table-container {
+    overflow-x: auto; /* Umożliwia przewijanie w poziomie na małych ekranach */
+    margin-top: 20px;
+  }
+  
+  .plant-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden; /* Aby border-radius działał poprawnie */
+  }
+  
+  .plant-table th,
+  .plant-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .plant-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .plant-table tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .plant-table-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+  
+  .water-button-table {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .water-button-table:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Responsywność */
+  @media (max-width: 768px) {
+    .plant-table th,
+    .plant-table td {
+      font-size: 0.9rem;
+      padding: 8px 10px;
+    }
+    .plant-table-image {
+      width: 40px;
+      height: 40px;
+    }
+  }

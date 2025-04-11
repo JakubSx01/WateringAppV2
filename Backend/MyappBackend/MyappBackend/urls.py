@@ -22,12 +22,11 @@ router.register(r'watering-history', WateringHistoryViewSet, basename='wateringh
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Change to use JWT token views
+    # ... (twoje ścieżki API)
     path('api/token/', TokenObtainPairView.as_view(permission_classes=[AllowAny]), name='token_obtain'),
     path('api/token/refresh/', TokenRefreshView.as_view(permission_classes=[AllowAny]), name='token_refresh'),
     path('api/', include(router.urls)),
     path('api/register/', UserRegistrationView.as_view(), name='register'),
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
