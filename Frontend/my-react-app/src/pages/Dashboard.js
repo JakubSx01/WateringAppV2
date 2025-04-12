@@ -1,135 +1,181 @@
 // Frontend/my-react-app/src/pages/Dashboard.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchUserPlants, fetchAllPlants, addPlantToUserCollection, waterUserPlant } from '../services/api'; // Upewnij się, że importujesz waterUserPlant
 import PlantTable from '../components/PlantTable';
 import PlantCardGrid from '../components/PlantCardGrid';
 import AvailablePlants from '../components/AvailablePlants';
 import AddPlantForm from '../components/AddPlantForm';
 import PlantDetailModal from '../components/PlantDetailModal';
+// --- FIX: Import the 'api' instance itself along with the functions ---
+import api, {
+    fetchUserPlants,
+    fetchAllPlants,
+    addPlantToUserCollection,
+    waterUserPlant,
+    deleteUserPlant,
+} from '../services/api'; // Correct import path
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
     const [userPlants, setUserPlants] = useState([]);
-    const [availablePlants, setAvailablePlants] = useState(null);
+    const [availablePlants, setAvailablePlants] = useState(null); // Keep null initially
     const [loadingUserPlants, setLoadingUserPlants] = useState(true);
     const [loadingAvailablePlants, setLoadingAvailablePlants] = useState(true);
-    // --- Rozdzielone stany błędów ---
-    const [userPlantError, setUserPlantError] = useState(null);
-    const [collectionError, setCollectionError] = useState(null);
-    const [formError, setFormError] = useState('');
-    // --- Koniec rozdzielonych stanów błędów ---
-    const [viewMode, setViewMode] = useState('card');
-    const [selectedPlantForDetail, setSelectedPlantForDetail] = useState(null); // Może zawierać { plant, last_watered_at... } LUB { plant }
+
+    // --- Separate Error States ---
+    const [userPlantsError, setUserPlantsError] = useState(''); // Error for user's plants section
+    const [availablePlantsError, setAvailablePlantsError] = useState(''); // Error for available plants list / adding to collection
+    const [addFormError, setAddFormError] = useState(''); // Error specifically for the AddPlantForm
+
+    const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
+    const [selectedPlantForDetail, setSelectedPlantForDetail] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [showAddForm, setShowAddForm] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false); // Toggle for AddPlantForm visibility
     const navigate = useNavigate();
 
+    // --- Logout Function ---
     const handleLogout = useCallback(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        navigate('/');
-    }, [navigate]);
+        // --- FIX: Now 'api' is defined due to the import ---
+        if (api && api.defaults && api.defaults.headers && api.defaults.headers.common) {
+             delete api.defaults.headers.common['Authorization']; // Clear default header
+        }
+        navigate('/'); // Redirect to home or login
+    }, [navigate]); // navigate is the dependency
 
+    // --- Data Fetching Functions ---
     const fetchUserPlantsData = useCallback(async () => {
         setLoadingUserPlants(true);
-        setUserPlantError(null); // Czyść błąd przed próbą
+        setUserPlantsError(''); // Clear previous error
         try {
             const response = await fetchUserPlants();
-            setUserPlants(response.data);
+            setUserPlants(response.data || []); // Ensure it's always an array
         } catch (err) {
-            console.error('Błąd pobierania roślin użytkownika', err);
-            setUserPlantError('Nie udało się pobrać Twoich roślin. Spróbuj ponownie później.'); // Ustaw odpowiedni błąd
-            if (err.response && err.response.status === 401) {
-                handleLogout();
+            console.error('Błąd pobierania roślin użytkownika:', err.response?.data || err.message);
+            setUserPlantsError('Nie udało się pobrać Twoich roślin. Spróbuj odświeżyć stronę.');
+            if (err.response?.status === 401) { // Check specific status code
+                handleLogout(); // Logout on authentication failure
             }
         } finally {
             setLoadingUserPlants(false);
         }
-    }, [handleLogout]);
+    }, [handleLogout]); // Dependency on handleLogout
 
     const fetchAvailablePlantsData = useCallback(async () => {
         setLoadingAvailablePlants(true);
-        setCollectionError(null); // Czyść błąd przed próbą
+        setAvailablePlantsError(''); // Clear previous error
         try {
             const response = await fetchAllPlants();
-            setAvailablePlants(response.data);
+            setAvailablePlants(response.data || []); // Ensure it's always an array
         } catch (err) {
-            console.error('Błąd pobierania dostępnych roślin', err);
-            setCollectionError('Nie udało się pobrać listy dostępnych roślin.'); // Ustaw odpowiedni błąd
+            console.error('Błąd pobierania dostępnych roślin:', err.response?.data || err.message);
+            setAvailablePlantsError('Nie udało się pobrać listy dostępnych roślin.');
+             if (err.response?.status === 401) {
+                // If fetching available plants fails due to auth, logout too
+                 handleLogout();
+             }
         } finally {
             setLoadingAvailablePlants(false);
         }
-    }, []);
+    }, [handleLogout]); // Dependency on handleLogout
 
+    // --- Initial Data Load Effect ---
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
-            return;
+            return; // Stop execution if no token
         }
-        // Czyść wszystkie błędy przy ładowaniu dashboardu
-        setUserPlantError(null);
-        setCollectionError(null);
-        setFormError('');
+        // Reset errors on load
+        setUserPlantsError('');
+        setAvailablePlantsError('');
+        setAddFormError('');
+
         fetchUserPlantsData();
         fetchAvailablePlantsData();
-    }, [navigate, fetchUserPlantsData, fetchAvailablePlantsData]); // Zależności są OK
+        // Run only once on mount, dependencies ensure fetch functions are stable
+    }, [navigate, fetchUserPlantsData, fetchAvailablePlantsData]);
 
+    // --- Action Handlers ---
     const handleWaterPlant = async (userPlantId) => {
-        setUserPlantError(null); // Czyść błąd
+        setUserPlantsError(''); // Clear error before action
+        const originalPlants = [...userPlants]; // Store original state for potential rollback
+        // Optimistic UI update (optional, makes it feel faster)
+        setUserPlants(prevPlants => prevPlants.map(p =>
+            p.id === userPlantId ? { ...p, next_watering_date: 'Podlewanie...' } : p // Indicate loading state
+        ));
+
         try {
             await waterUserPlant(userPlantId);
-            fetchUserPlantsData();
-            console.log('Roślina podlana!');
+            fetchUserPlantsData(); // Refresh data from server to get accurate next watering date
         } catch (err) {
-            console.error('Błąd podczas podlewania rośliny', err);
-            setUserPlantError('Nie udało się podlać rośliny.'); // Ustaw odpowiedni błąd
-            if (err.response && err.response.status === 401) {
+            console.error('Błąd podczas podlewania rośliny:', err.response?.data || err.message);
+            setUserPlantsError('Nie udało się podlać rośliny. Spróbuj ponownie.');
+            setUserPlants(originalPlants); // Rollback optimistic update on error
+            if (err.response?.status === 401) {
                 handleLogout();
             }
         }
     };
 
     const handleAddToCollection = async (plantId) => {
-        setCollectionError(null); // Czyść błąd
+        setAvailablePlantsError(''); // Clear error before action
         try {
             await addPlantToUserCollection(plantId);
-            console.log('Roślina dodana do Twojej kolekcji!');
-            fetchUserPlantsData(); // Odśwież listę użytkownika
-            // Opcjonalnie: odśwież listę dostępnych, jeśli chcesz zaktualizować przyciski 'disabled' natychmiast
-            // fetchAvailablePlantsData();
+            fetchUserPlantsData(); // Refresh user's plants list
         } catch (err) {
-            console.error('Błąd dodawania rośliny do kolekcji', err.response?.data || err.message);
+            console.error('Błąd dodawania rośliny do kolekcji:', err.response?.data || err.message);
             let errMsg = 'Nie udało się dodać rośliny do kolekcji.';
-             if (err.response?.data?.non_field_errors?.[0]?.includes('unique constraint')) {
+            if (err.response?.data?.non_field_errors?.[0]?.includes('unique constraint')) {
                 errMsg = 'Masz już tę roślinę w swojej kolekcji.';
+            } else if (err.response?.data?.plant_id?.[0]?.includes('Invalid pk')) {
+                errMsg = 'Wybrana roślina nie istnieje w bazie danych.';
             } else if (err.response?.status === 401) {
-                handleLogout();
-                return;
+                 handleLogout();
+                 return;
+            } else if (err.response?.status === 400) {
+                 errMsg = 'Błąd zapytania podczas dodawania rośliny.'
             }
-            setCollectionError(errMsg); // Ustaw odpowiedni błąd
+            setAvailablePlantsError(errMsg);
         }
     };
 
-    const handlePlantDefinitionAdded = () => {
-        console.log('Nowa roślina dodana do globalnej bazy danych!');
-        setFormError('');
-        setShowAddForm(false);
-        fetchAvailablePlantsData();
+     const handleDeletePlant = async (userPlantId) => {
+        // Confirmation moved to PlantTable/PlantCard component for direct interaction
+        setUserPlantsError(''); // Clear error
+        const originalPlants = [...userPlants];
+
+        // Optimistic UI update: remove immediately
+        setUserPlants(prevPlants => prevPlants.filter(p => p.id !== userPlantId));
+
+        try {
+            await deleteUserPlant(userPlantId);
+        } catch (err) {
+            console.error('Błąd podczas usuwania rośliny:', err.response?.data || err.message);
+            setUserPlantsError('Nie udało się usunąć rośliny.');
+            setUserPlants(originalPlants); // Rollback on error
+            if (err.response?.status === 401) {
+                handleLogout();
+            }
+        }
     };
 
-    // Handler dla szczegółów rośliny użytkownika (UserPlant)
+
+    const handlePlantDefinitionAdded = () => {
+        setAddFormError(''); // Clear form-specific error
+        setShowAddForm(false); // Hide form on success
+        fetchAvailablePlantsData(); // Refresh the list of available plants
+    };
+
+    // --- Detail Modal Handlers ---
     const handleShowUserPlantDetails = (userPlant) => {
-        console.log("Pokazywanie szczegółów UserPlant:", userPlant); // Dodaj logowanie
-        setSelectedPlantForDetail(userPlant); // Przekaż cały obiekt UserPlant
+        setSelectedPlantForDetail(userPlant);
         setIsDetailModalOpen(true);
     };
 
-    // NOWY Handler dla szczegółów dostępnej rośliny (Plant)
-    const handleShowAvailablePlantDetails = (plant) => {
-        console.log("Pokazywanie szczegółów dostępnej rośliny:", plant); // Dodaj logowanie
-        setSelectedPlantForDetail({ plant: plant }); // Przekaż obiekt w strukturze { plant: Plant }
+    const handleShowAvailablePlantDetails = (plantDefinition) => {
+        setSelectedPlantForDetail({ plant: plantDefinition });
         setIsDetailModalOpen(true);
     };
 
@@ -138,98 +184,118 @@ const Dashboard = () => {
         setSelectedPlantForDetail(null);
     };
 
-    const userOwnedPlantIds = userPlants.map(up => up.plant.id);
+    // --- Derived State ---
+    const userOwnedPlantIds = React.useMemo(() => new Set(userPlants.map(up => up.plant.id)), [userPlants]);
     const isLoading = loadingUserPlants || loadingAvailablePlants;
 
+
+    // --- Render Logic ---
     return (
         <div className="dashboard-container">
 
             {/* --- User's Plants Section --- */}
             <div className="dashboard-section user-plants-section">
                  <div className="dashboard-header">
-                    <h2>Twoje rośliny</h2>
-                    <div className="view-toggle-buttons">
-                       {/* Przyciski widoku bez zmian */}
-                        <button onClick={() => setViewMode('card')} className={`button view-button ${viewMode === 'card' ? 'active' : ''}`} disabled={loadingUserPlants}>Widok Kart</button>
-                        <button onClick={() => setViewMode('table')} className={`button view-button ${viewMode === 'table' ? 'active' : ''}`} disabled={loadingUserPlants}>Widok Tabeli</button>
-                    </div>
+                    <h2>Twoje rośliny ({userPlants.length})</h2>
+                    {!loadingUserPlants && userPlants.length > 0 && (
+                        <div className="view-toggle-buttons">
+                            <button
+                                onClick={() => setViewMode('card')}
+                                className={`button view-button ${viewMode === 'card' ? 'active' : ''}`}
+                                disabled={loadingUserPlants}
+                            >
+                                Karty
+                            </button>
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`button view-button ${viewMode === 'table' ? 'active' : ''}`}
+                                disabled={loadingUserPlants}
+                            >
+                                Tabela
+                            </button>
+                        </div>
+                    )}
                 </div>
-                {/* Wyświetlaj błąd TYLKO dla tej sekcji */}
-                {userPlantError && <div className="error-message">{userPlantError}</div>}
+
+                {userPlantsError && <div className="error-message">{userPlantsError}</div>}
                 {loadingUserPlants && <div className="loading">Ładowanie Twoich roślin...</div>}
-                {/* Reszta logiki wyświetlania roślin użytkownika bez zmian */}
-                {!loadingUserPlants && !userPlantError && userPlants.length === 0 && (
-                    <p>Nie masz jeszcze żadnych roślin w swojej kolekcji.</p>
+
+                {!loadingUserPlants && !userPlantsError && userPlants.length === 0 && (
+                    <p style={{ textAlign: 'center', margin: '20px 0' }}>Nie masz jeszcze żadnych roślin w swojej kolekcji. Dodaj je z listy poniżej!</p>
                 )}
                 {!loadingUserPlants && userPlants.length > 0 && (
-                     <div className="plants-display-section">
+                     <div className="plants-display-section" style={{ marginTop: '20px' }}>
                         {viewMode === 'card' ? (
                             <PlantCardGrid
                                 plants={userPlants}
                                 onWater={handleWaterPlant}
-                                onShowDetails={handleShowUserPlantDetails} // Użyj handlera dla UserPlant
+                                onShowDetails={handleShowUserPlantDetails}
+                                onDelete={handleDeletePlant}
                             />
                         ) : (
                             <PlantTable
                                 plants={userPlants}
                                 onWater={handleWaterPlant}
-                                onShowDetails={handleShowUserPlantDetails} // Użyj handlera dla UserPlant
+                                onShowDetails={handleShowUserPlantDetails}
+                                onDelete={handleDeletePlant}
                             />
                         )}
                     </div>
                 )}
-            </div>
+            </div> {/* End User's Plants Section */}
+
 
             {/* --- Available Plants & Add New Plant Section --- */}
             <div className="dashboard-section available-plants-add-section">
-                <h2 className="section-title">Przeglądaj i Dodawaj Rośliny</h2>
-                {/* Wyświetlaj błąd TYLKO dla tej sekcji */}
-                 {collectionError && <div className="error-message">{collectionError}</div>}
+                <h2 className="section-title">Dostępne Rośliny / Dodaj Nową do Bazy</h2>
+
+                 {availablePlantsError && <div className="error-message">{availablePlantsError}</div>}
                  {loadingAvailablePlants && <div className="loading">Ładowanie dostępnych roślin...</div>}
 
-                {/* Lista dostępnych roślin */}
-                 {!loadingAvailablePlants && availablePlants && (
-                    <AvailablePlants
+                 {!loadingAvailablePlants && availablePlants !== null && (
+                     <AvailablePlants
                         plants={availablePlants}
                         onAddToCollection={handleAddToCollection}
                         userPlantIds={userOwnedPlantIds}
-                        onShowDetails={handleShowAvailablePlantDetails} // Przekaż NOWY handler
+                        onShowDetails={handleShowAvailablePlantDetails}
                     />
                  )}
-                 {!loadingAvailablePlants && !availablePlants && !collectionError && (
+                 {!loadingAvailablePlants && availablePlants === null && !availablePlantsError && (
                     <p>Nie udało się załadować dostępnych roślin.</p>
                  )}
+
                  <hr className="section-separator" />
-                 {/* Przycisk przełączania formularza bez zmian */}
                  <div className="toggle-form-section">
-                    <button onClick={() => setShowAddForm(!showAddForm)} className="button button-secondary toggle-add-form-button" disabled={isLoading}>
-                       {showAddForm ? 'Ukryj Formularz Dodawania' : 'Dodaj Nową Roślinę do Bazy'}
+                    <button
+                        onClick={() => setShowAddForm(!showAddForm)}
+                        className="button button-secondary toggle-add-form-button"
+                        disabled={isLoading}
+                    >
+                       {showAddForm ? 'Ukryj Formularz Dodawania Rośliny do Bazy' : 'Dodaj Nową Roślinę do Bazy'}
                     </button>
                  </div>
-                 {/* Formularz dodawania bez zmian */}
+
                  {showAddForm && (
                      <div className="add-plant-form-wrapper">
-                        {/* Wyświetlaj błąd TYLKO dla formularza */}
-                        {formError && <div className="error-message">{formError}</div>}
+                        {addFormError && <div className="error-message">{addFormError}</div>}
                         <AddPlantForm
                             onPlantAdded={handlePlantDefinitionAdded}
-                            onError={setFormError} // Użyj setFormError
+                            onError={setAddFormError}
                         />
                      </div>
                  )}
-            </div>
+            </div> {/* End Available Plants & Add New Plant Section */}
+
 
             {/* --- Plant Detail Modal --- */}
-            {/* Renderowanie modalu bez zmian, ale dostanie teraz różne struktury w selectedPlantForDetail */}
             {isDetailModalOpen && selectedPlantForDetail && (
                 <PlantDetailModal
-                    // Kluczowe: Przekazujemy obiekt, który ZAWSZE ma klucz 'plant'
-                    // a opcjonalnie ma resztę pól UserPlant
                     plantData={selectedPlantForDetail}
                     onClose={handleCloseDetails}
                 />
             )}
-        </div>
+
+        </div> // End Dashboard Container
     );
 };
 

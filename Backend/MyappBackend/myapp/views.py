@@ -17,10 +17,10 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response({"message": "Rejestracja zakończona pomyślnie."}, status=status.HTTP_201_CREATED)
 
 # Przeglądanie globalnej listy roślin
-class PlantViewSet(viewsets.ReadOnlyModelViewSet):
+class PlantViewSet(viewsets.ModelViewSet):
     queryset = Plant.objects.all()
     serializer_class = PlantSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 # Zarządzanie roślinami użytkownika
 class UserPlantViewSet(viewsets.ModelViewSet):
@@ -54,8 +54,3 @@ class WateringHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return WateringHistory.objects.filter(user_plant__user=self.request.user)
     
-def perform_create(self, serializer):
-    try:
-        serializer.save(user=self.request.user)
-    except Exception as e:
-        print("Błąd dodawania rośliny:", e)

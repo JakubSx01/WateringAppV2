@@ -4,7 +4,7 @@ import '../styles/PlantCard.css';
 import { formatDate } from '../utils/dateUtils';
 import { getImageUrl } from '../utils/imageUtils';
 
-const PlantCard = ({ plant: userPlant, onWater, onShowDetails }) => {
+const PlantCard = ({ plant: userPlant, onWater, onShowDetails, onDelete }) => {
     const handleCardClick = () => {
         console.log("Kliknięto kartę:", userPlant); // Dodaj logowanie
         if (onShowDetails) {
@@ -15,6 +15,13 @@ const PlantCard = ({ plant: userPlant, onWater, onShowDetails }) => {
     const handleButtonClick = (e) => {
         e.stopPropagation();
         onWater(userPlant.id);
+    };
+
+    const handleDeleteClick = (e) => {
+        e.stopPropagation(); // Zapobiegaj kliknięciu na kartę
+        if (onDelete) {
+            onDelete(userPlant.id); // Wywołaj funkcję przekazaną z Dashboard
+        }
     };
 
     return (
@@ -45,6 +52,9 @@ const PlantCard = ({ plant: userPlant, onWater, onShowDetails }) => {
                 </div>
                 <button onClick={handleButtonClick} className="button water-button-card">
                     Podlej
+                </button>
+                <button onClick={handleDeleteClick} className="button button-danger delete-button-card">
+                        Usuń
                 </button>
             </div>
         </div>

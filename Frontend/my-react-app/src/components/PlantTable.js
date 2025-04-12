@@ -1,19 +1,28 @@
+// Frontend/my-react-app/src/components/PlantTable.js
 import React from 'react';
 import '../styles/PlantTable.css';
 import { formatDate } from '../utils/dateUtils';
 import { getImageUrl } from '../utils/imageUtils';
 
 // Add onShowDetails prop
-const PlantTable = ({ plants, onWater, onShowDetails }) => {
+const PlantTable = ({ plants, onWater, onShowDetails, onDelete }) => {
   if (!plants || plants.length === 0) {
-    return <p>Nie masz jeszcze żadnych roślin.</p>;
+    return <p>Nie masz jeszcze żadnych roślin w swojej kolekcji.</p>; // Updated message
   }
 
   // Prevent default action or bubbling if needed when clicking button
-   const handleButtonClick = (e, userPlantId) => {
+   const handleWaterClick = (e, userPlantId) => {
     e.stopPropagation(); // Stop event from bubbling up to the row
     onWater(userPlantId);
   };
+
+  const handleDeleteClick = (e, userPlantId) => {
+    e.stopPropagation(); // Stop event from bubbling up to the row
+    if (window.confirm('Czy na pewno chcesz usunąć tę roślinę ze swojej kolekcji?')) { // Add confirmation here
+        onDelete(userPlantId);
+    }
+  };
+
 
   // Function to call onShowDetails when row is clicked
   const handleRowClick = (userPlant) => {
@@ -27,37 +36,42 @@ const PlantTable = ({ plants, onWater, onShowDetails }) => {
       <table className="plant-table">
         <thead>
           <tr>
-            <th>Zdjęcie</th>
-            <th>Nazwa rośliny</th>
-            <th>Ilość wody (ml)</th>
-            <th>Ostatnie podlanie</th>
-            <th>Następne podlanie</th>
-            <th>Akcja</th>
+            {/* Add data-label for potential responsive stacking */}
+            <th data-label="Zdjęcie">Zdjęcie</th>
+            <th data-label="Nazwa">Nazwa</th>
+            <th data-label="Ilość wody (ml)">Ilość wody (ml)</th>
+            <th data-label="Ostatnie podlanie">Ostatnie podlanie</th>
+            <th data-label="Następne podlanie">Następne podlanie</th>
+            <th data-label="Akcje">Akcje</th>
           </tr>
         </thead>
         <tbody>
           {plants.map((userPlant) => (
             // Add onClick to the table row
             <tr key={userPlant.id} onClick={() => handleRowClick(userPlant)} className="plant-table-row">
-              <td>
+              <td data-label="Zdjęcie"> {/* Add data-label */}
                 <img
                   src={getImageUrl(userPlant.plant.image)}
                   alt={userPlant.plant.name}
                   className="plant-table-image"
+                  // Add placeholder on error
                   onError={(e) => { e.target.onerror = null; e.target.src='/placeholder-plant.png'; }}
                 />
               </td>
-              <td>{userPlant.plant.name}</td>
-              <td>{userPlant.plant.water_amount_ml} ml</td>
-              <td>{formatDate(userPlant.last_watered_at)}</td>
-              <td>{formatDate(userPlant.next_watering_date)}</td>
-              <td>
+              <td data-label="Nazwa">{userPlant.plant.name}</td> {/* Add data-label */}
+              <td data-label="Ilość wody (ml)">{userPlant.plant.water_amount_ml} ml</td> {/* Add data-label */}
+              <td data-label="Ostatnie podlanie">{formatDate(userPlant.last_watered_at)}</td> {/* Add data-label */}
+              <td data-label="Następne podlanie">{formatDate(userPlant.next_watering_date)}</td> {/* Add data-label */}
+              <td data-label="Akcje"> {/* Add data-label */}
                 {/* Add stopPropagation to button's onClick */}
-                <button onClick={(e) => handleButtonClick(e, userPlant.id)} className="button water-button-table">
+                <button onClick={(e) => handleWaterClick(e, userPlant.id)} className="button water-button-table">
                   Podlej
                 </button>
-                 {/* Optional: Add a dedicated "Details" button/link */}
-                 {/* <button onClick={(e) => { e.stopPropagation(); onShowDetails(userPlant); }} className="button button-secondary details-button-table">Szczegóły</button> */}
+                <button onClick={(e) => handleDeleteClick(e, userPlant.id)} className="button button-danger delete-button-table">
+                  Usuń
+                </button>
+                 {/* Optional: Details button example */}
+                 {/* <button onClick={(e) => { e.stopPropagation(); onShowDetails(userPlant); }} className="button details-button-table">Szczegóły</button> */}
               </td>
             </tr>
           ))}

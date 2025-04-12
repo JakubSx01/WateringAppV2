@@ -4,7 +4,7 @@ import PlantCard from './PlantCard';
 import '../styles/PlantCardGrid.css';
 
 // Upewnij się, że onShowDetails jest tutaj przekazywane
-const PlantCardGrid = ({ plants, onWater, onShowDetails }) => {
+const PlantCardGrid = ({ plants, onWater, onShowDetails, onDelete }) => {
   if (!plants || plants.length === 0) {
     return <p>Nie masz jeszcze żadnych roślin.</p>;
   }
@@ -16,7 +16,8 @@ const PlantCardGrid = ({ plants, onWater, onShowDetails }) => {
             key={userPlant.id}
             plant={userPlant}
             onWater={onWater}
-            onShowDetails={onShowDetails} // <-- Upewnij się, że ta linia istnieje i przekazuje prop
+            onShowDetails={onShowDetails}
+            onDelete={onDelete}
         />
       ))}
     </div>
