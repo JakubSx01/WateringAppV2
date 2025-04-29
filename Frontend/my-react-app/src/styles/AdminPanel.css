@@ -1,0 +1,123 @@
+/* Frontend/my-react-app/src/styles/AdminPanel.css */
+/* Admin panel can reuse many moderator styles */
+.admin-panel .admin-section {
+    background-color: #ffffff;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.admin-panel .admin-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #34495e;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+
+.admin-panel .admin-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-panel .admin-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-panel .admin-list-item:last-child {
+    border-bottom: none;
+}
+
+.admin-panel .admin-item-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+     border-radius: 4px;
+    margin-right: 15px;
+    flex-shrink: 0;
+    border: 1px solid #ddd;
+}
+
+.admin-panel .admin-item-info {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.admin-panel .admin-item-info small {
+    color: #555;
+    font-size: 0.85rem;
+}
+
+.admin-panel .admin-item-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Reused small button style */
+.admin-panel .small-button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.admin-panel .button-secondary.small-button {
+    background-color: #3498db;
+}
+.admin-panel .button-secondary.small-button:hover {
+    background-color: #2980b9;
+}
+
+.admin-panel .button-danger.small-button {
+    background-color: #e74c3c;
+}
+.admin-panel .button-danger.small-button:hover {
+    background-color: #c0392b;
+}
+
+/* Specific styles if needed for different sections */
+.admin-panel .user-list .admin-item-image {
+    /* Users might not have images, or use a default icon */
+     border-radius: 50%; /* Round user icon */
+}
+
+/* Frontend/my-react-app/src/styles/AdminPanel.css */
+/* ... (existing styles, can be similar to ModeratorPanel CSS) ... */
+
+.admin-panel .user-list-item {
+    cursor: pointer; /* Indicate clickable */
+    transition: background-color 0.2s ease;
+}
+.admin-panel .user-list-item:hover {
+    background-color: #f8f9fa; /* Light hover effect */
+}
+
+.admin-panel .user-icon-placeholder {
+    font-size: 1.8rem;
+    margin-right: 15px;
+    color: #7f8c8d;
+    flex-shrink: 0;
+}
+
+.admin-panel .back-button {
+    margin-bottom: 20px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+/* Specific styles for user plant items within the user plants list */
+.admin-panel .user-plants-list .admin-item-image {
+     border-radius: 4px; /* Keep square for plant images */
+}
+/* .admin-panel .user-plants-list .admin-item-info small { ... } */
+
+/* Specific styles for plant definition items */
+.admin-panel .plant-definition-item .admin-item-image {
+     border-radius: 4px; /* Keep square for plant images */
+}

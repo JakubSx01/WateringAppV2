@@ -1,42 +1,70 @@
+// Frontend/my-react-app/src/pages/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Use the consolidated api service
-import { loginUser } from '../services/api';
+import { loginUser } from '../services/api'; // Make sure this import is correct
 import '../styles/Login.css';
 
-const Login = () => {
+// Accept onLoginSuccess prop
+const Login = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(''); // State for error messages
-    const [loading, setLoading] = useState(false); // State for loading indicator
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError(''); // Clear previous errors
-        setLoading(true); // Set loading state
+        setError('');
+        setLoading(true);
 
         try {
-            const response = await loginUser({ username, password });
-            localStorage.setItem('token', response.data.access);
-            localStorage.setItem('refreshToken', response.data.refresh);
-             // --- Alert Removed ---
-             // alert('Zalogowano pomyślnie!');
-             console.log('Zalogowano pomyślnie!'); // Log instead of alert
-            navigate('/dashboard'); // Redirect after successful login
+            const responseData = await loginUser({ username, password });
+            // tokens are already set in localStorage within api.js/loginUser
+
+            console.log('Login successful, fetching user data...');
+
+            // --- Call the success callback and get the user object ---
+            let user = null;
+            if (onLoginSuccess) {
+                 user = await onLoginSuccess(); // Assume onLoginSuccess returns the fetched user object or null
+            }
+            // --- End Call ---
+
+            if (user) { // If user data was successfully fetched
+                if (user.is_superuser) {
+                    navigate('/admin-panel');
+                } else if (user.is_staff) {
+                    navigate('/moderator-panel');
+                } else {
+                    navigate('/dashboard'); // Regular user
+                }
+           } else {
+                // Fallback if fetching user data failed AFTER getting tokens
+                // This shouldn't ideally happen if tokens are valid
+                navigate('/dashboard');
+           }
+
+
         } catch (err) {
-            console.error('Błąd logowania', err.response?.data || err.message);
+            console.error('Login error:', err.response?.data || err.message);
             if (err.response && err.response.status === 401) {
                 setError('Niepoprawne dane logowania. Sprawdź nazwę użytkownika i hasło.');
-            } else {
+            } else if (err.message === 'Network Error') {
+                 setError('Błąd sieci. Sprawdź połączenie z internetem.');
+             } else {
                 setError('Wystąpił błąd podczas logowania. Spróbuj ponownie później.');
             }
+            // Ensure tokens are cleared if login failed
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     };
 
-    return (
+    // ... rest of the component (return JSX) ...
+     return (
         <div className="login-container">
             <h2 className="login-title">Logowanie</h2>
 
@@ -52,9 +80,9 @@ const Login = () => {
                         placeholder="Nazwa użytkownika"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="login-input"
+                        className="form-input login-input"
                         required
-                        disabled={loading} // Disable input while loading
+                        disabled={loading}
                     />
                 </div>
                 <div className="form-group">
@@ -65,12 +93,12 @@ const Login = () => {
                         placeholder="Hasło"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="login-input"
+                        className="form-input login-input"
                         required
-                        disabled={loading} // Disable input while loading
+                        disabled={loading}
                     />
                  </div>
-                <button type="submit" className="login-button" disabled={loading}>
+                <button type="submit" className="button login-button" disabled={loading}>
                     {loading ? 'Logowanie...' : 'Zaloguj'}
                 </button>
             </form>

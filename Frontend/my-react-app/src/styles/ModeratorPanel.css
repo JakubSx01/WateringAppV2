@@ -1,0 +1,121 @@
+/* Frontend/my-react-app/src/styles/ModeratorPanel.css */
+.moderator-panel .moderator-section {
+    background-color: #ffffff;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.moderator-panel .moderator-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #34495e;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+
+.moderator-panel .moderator-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.moderator-panel .moderator-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.moderator-panel .moderator-list-item:last-child {
+    border-bottom: none;
+}
+
+.moderator-panel .moderator-item-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px; /* Square images for clarity */
+    margin-right: 15px;
+    flex-shrink: 0;
+     border: 1px solid #ddd;
+}
+
+.moderator-panel .moderator-item-info {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.moderator-panel .moderator-item-info small {
+    color: #555;
+    font-size: 0.85rem;
+}
+
+.moderator-panel .moderator-item-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px; /* Space between buttons */
+    align-items: center;
+}
+
+/* Reused small button style from App.css or define here */
+.moderator-panel .small-button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.moderator-panel .button-secondary.small-button {
+    background-color: #3498db;
+}
+.moderator-panel .button-secondary.small-button:hover {
+    background-color: #2980b9;
+}
+
+.moderator-panel .button-danger.small-button {
+    background-color: #e74c3c;
+}
+.moderator-panel .button-danger.small-button:hover {
+    background-color: #c0392b;
+}
+
+/* Specific style for pending items */
+.moderator-panel .pending-plant-item {
+     /* Optional: add a left border or background color */
+     /* border-left: 3px solid #f39c12; */
+     /* background-color: #fffbe6; */
+}
+
+/* Frontend/my-react-app/src/styles/ModeratorPanel.css */
+/* ... (existing styles) ... */
+
+.moderator-panel .user-list-item {
+    cursor: pointer; /* Indicate clickable */
+    transition: background-color 0.2s ease;
+}
+.moderator-panel .user-list-item:hover {
+    background-color: #f8f9fa; /* Light hover effect */
+}
+
+.moderator-panel .user-icon-placeholder {
+    font-size: 1.8rem; /* Make icon prominent */
+    margin-right: 15px;
+    color: #7f8c8d; /* Greyish color */
+    flex-shrink: 0;
+}
+
+.moderator-panel .back-button {
+    margin-bottom: 20px; /* Space below the back button */
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+/* Specific styles for user plant items within the user plants list */
+.moderator-panel .user-plants-list .moderator-item-image {
+    border-radius: 4px; /* Keep square for plant images */
+}
+
+.moderator-panel .user-plants-list .moderator-item-info small {
+    /* Adjust small text in user plant list if needed */
+}

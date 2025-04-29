@@ -1,9 +1,11 @@
+# myapp/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import date, timedelta
+from django.utils import timezone # Import timezone
 
 class Plant(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True) # Keep unique for the definition name
     species = models.CharField(max_length=100, blank=True, null=True)
     image = models.ImageField(upload_to='plant_images/', blank=True, null=True)
     water_amount_ml = models.PositiveIntegerField(help_text="Optymalna ilość wody w ml")
@@ -12,51 +14,78 @@ class Plant(models.Model):
     # --- Zaktualizowane Choices dla Sunlight ---
     SUNLIGHT_FULL_SUN = 'full_sun'
     SUNLIGHT_PARTIAL_SHADE = 'partial_shade'
-    SUNLIGHT_BRIGHT_INDIRECT = 'bright_indirect' # Nowa opcja dla "Jasne rozproszone"
+    SUNLIGHT_BRIGHT_INDIRECT = 'bright_indirect'
     SUNLIGHT_SHADE = 'shade'
     SUNLIGHT_CHOICES = [
-        (SUNLIGHT_FULL_SUN, 'Pełne słońce'),      # Klucz: full_sun, Etykieta: Pełne słońce
-        (SUNLIGHT_PARTIAL_SHADE, 'Półcień'),     # Klucz: partial_shade, Etykieta: Półcień
-        (SUNLIGHT_BRIGHT_INDIRECT, 'Jasne rozproszone'), # Klucz: bright_indirect, Etykieta: Jasne rozproszone
-        (SUNLIGHT_SHADE, 'Cień'),                # Klucz: shade, Etykieta: Cień
+        (SUNLIGHT_FULL_SUN, 'Pełne słońce'),
+        (SUNLIGHT_PARTIAL_SHADE, 'Półcień'),
+        (SUNLIGHT_BRIGHT_INDIRECT, 'Jasne rozproszone'),
+        (SUNLIGHT_SHADE, 'Cień'),
     ]
     sunlight = models.CharField(
         max_length=50,
         choices=SUNLIGHT_CHOICES,
         blank=True,
         null=True,
-        help_text="Wymagania dotyczące światła" # Dodany help_text
+        help_text="Wymagania dotyczące światła"
     )
-    # --- Koniec aktualizacji Sunlight ---
 
     # --- Dodane Choices dla Soil Type ---
     SOIL_UNIVERSAL = 'universal'
-    SOIL_SANDY = 'sandy'            # Dla "Piaszczysta"
-    SOIL_PEAT = 'peat'              # Dla "Torfowa"
-    SOIL_CLAY = 'clay'              # Dla "Gliniasta"
-    SOIL_LOAMY = 'loamy'            # Opcjonalnie: "Próchnicza"
-    SOIL_CHALKY = 'chalky'          # Opcjonalnie: "Wapienna"
+    SOIL_SANDY = 'sandy'
+    SOIL_PEAT = 'peat'
+    SOIL_CLAY = 'clay'
+    SOIL_LOAMY = 'loamy'
+    SOIL_CHALKY = 'chalky'
     SOIL_TYPE_CHOICES = [
-        (SOIL_UNIVERSAL, 'Uniwersalna'), # Klucz: universal, Etykieta: Uniwersalna
-        (SOIL_SANDY, 'Piaszczysta'),     # Klucz: sandy, Etykieta: Piaszczysta
-        (SOIL_PEAT, 'Torfowa'),          # Klucz: peat, Etykieta: Torfowa
-        (SOIL_CLAY, 'Gliniasta'),        # Klucz: clay, Etykieta: Gliniasta
-        (SOIL_LOAMY, 'Próchnicza'),      # Możesz dodać więcej opcji
+        (SOIL_UNIVERSAL, 'Uniwersalna'),
+        (SOIL_SANDY, 'Piaszczysta'),
+        (SOIL_PEAT, 'Torfowa'),
+        (SOIL_CLAY, 'Gliniasta'),
+        (SOIL_LOAMY, 'Próchnicza'),
         (SOIL_CHALKY, 'Wapienna'),
-        # Można dodać też opcję 'other' jeśli potrzeba
     ]
     soil_type = models.CharField(
         max_length=100,
-        choices=SOIL_TYPE_CHOICES, # Użyj choices
+        choices=SOIL_TYPE_CHOICES,
         blank=True,
         null=True,
-        help_text="Preferowany typ gleby" # Dodany help_text
+        help_text="Preferowany typ gleby"
     )
-    # --- Koniec aktualizacji Soil Type ---
-
     preferred_temperature = models.IntegerField(blank=True, null=True, help_text="Temperatura °C")
 
+    # --- New Fields for Moderation ---
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending Approval'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_APPROVED, # Existing plants are approved by default
+        help_text="Status zatwierdzenia rośliny w bazie globalnej"
+    )
+    proposed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL, # Keep plant if user is deleted
+        null=True,
+        blank=True,
+        related_name='proposed_plants',
+        help_text="Użytkownik, który zaproponował dodanie tej rośliny do bazy"
+    )
+    # --- End New Fields ---
+
+
     def __str__(self):
+        # Indicate pending status in string representation
+        if self.status == self.STATUS_PENDING:
+             return f"{self.name} (Pending)"
+        if self.status == self.STATUS_REJECTED:
+             return f"{self.name} (Rejected)"
         return self.name
 
 # Model roślin użytkownika
@@ -66,15 +95,18 @@ class UserPlant(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
     next_watering_date = models.DateField(null=True, blank=True, help_text="Data następnego podlewania")
 
-    class Meta:
-        unique_together = ('user', 'plant')  # Zapobiega duplikacji tej samej rośliny dla jednego użytkownika
+    # --- REMOVE or COMMENT OUT the unique_together constraint ---
+    # class Meta:
+    #     unique_together = ('user', 'plant') # REMOVE THIS LINE to allow multiple instances
 
     def __str__(self):
+        # Add User ID or unique identifier if needed, but username is fine for display
         return f"{self.plant.name} ({self.user.username})"
 
     def update_next_watering(self):
         """Oblicza datę następnego podlewania na podstawie modelu rośliny."""
-        self.next_watering_date = date.today() + timedelta(days=self.plant.watering_frequency_days)
+        # Use timezone.localdate() for timezone-aware date
+        self.next_watering_date = timezone.localdate() + timezone.timedelta(days=self.plant.watering_frequency_days)
         self.save()
 
 
@@ -84,7 +116,8 @@ class WateringHistory(models.Model):
     watered_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-watered_at']  # Sortowanie od najnowszych wpisów
+        ordering = ['-watered_at']
 
     def __str__(self):
-        return f"{self.user_plant.plant.name} podlana {self.watered_at:%Y-%m-%d %H:%M}"
+        # Use timezone.localtime for timezone-aware datetime display
+        return f"{self.user_plant.plant.name} podlana {timezone.localtime(self.watered_at):%Y-%m-%d %H:%M}"
