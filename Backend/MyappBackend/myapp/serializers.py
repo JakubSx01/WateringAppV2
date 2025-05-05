@@ -6,10 +6,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-# --- FIX: Remove circular import ---
-# from .views import AdminUserPlantViewSet # REMOVE THIS LINE
 
-# UserRegistrationSerializer (OK as is)
+# UserRegistrationSerializer
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -19,10 +17,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'password', 'password2', 'first_name', 'last_name')
 
     def validate(self, data):
-        if User.objects.filter(username=data['username']).exists():
-             raise serializers.ValidationError({"username": "Użytkownik o tej nazwie już istnieje."})
-        if 'email' in data and data['email'] and User.objects.filter(email=data['email']).exists():
-             raise serializers.ValidationError({"email": "Użytkownik o tym adresie email już istnieje."})
+        username_exists = User.objects.filter(username=data['username']).exists()
+        email_exists = False
+        if 'email' in data and data['email']:
+             email_exists = User.objects.filter(email=data['email']).exists()
+
+        # More generic error to hinder user enumeration (optional change)
+        if username_exists or email_exists:
+             raise serializers.ValidationError({"detail": "Użytkownik o tej nazwie lub adresie email już istnieje."})
 
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Hasła nie są identyczne."})
@@ -44,7 +46,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 # PlantSerializer
 class PlantSerializer(serializers.ModelSerializer):
     proposed_by = serializers.ReadOnlyField(source='proposed_by.username')
-    status = serializers.ChoiceField(choices=Plant.STATUS_CHOICES, read_only=True) # Default read-only
+    status = serializers.ChoiceField(choices=Plant.STATUS_CHOICES, read_only=True)
 
     class Meta:
         model = Plant
@@ -57,15 +59,9 @@ class PlantSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        request_user = self.context.get('request').user if 'request' in self.context else None
-
-        # --- FIX: Check for specific context flag instead of view type ---
         is_admin_plant_view_context = self.context.get('is_admin_plant_view', False)
-
-        # If in admin plant view context (staff/superuser), make status writable
         if is_admin_plant_view_context:
              self.fields['status'].read_only = False
-        # Otherwise (standard user view, or non-admin view), status remains read-only (default)
 
 
 # UserPlantSerializer
@@ -80,7 +76,7 @@ class UserPlantSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         write_only=True,
-        required=False
+        required=False # Made optional, required only in admin view context
     )
 
     last_watered_at = serializers.SerializerMethodField(read_only=True)
@@ -95,11 +91,13 @@ class UserPlantSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
          super().__init__(*args, **kwargs)
-         # --- FIX: Check for specific context flag instead of view type ---
          is_admin_user_plant_view_context = self.context.get('is_admin_user_plant_view', False)
-
          # Make 'user' field writable ONLY in the admin user plant view context
          self.fields['user'].read_only = not is_admin_user_plant_view_context
+         if is_admin_user_plant_view_context:
+              self.fields['user'].required = True # Make it required if admin is adding
+         else:
+              self.fields['user'].required = False # Not required for standard user
 
 
     def get_last_watered_at(self, obj):
@@ -144,6 +142,19 @@ class UserSerializer(serializers.ModelSerializer):
         if 'is_staff' in validated_data and validated_data['is_staff'] is True and not request_user.is_superuser:
              raise ValidationError({"is_staff": "Only administrators can grant moderator status."})
 
+        # Prevent moderators from disabling admins or other mods (unless it's themselves)
+        if not request_user.is_superuser and 'is_active' in validated_data and not validated_data['is_active']:
+             if instance.is_superuser or (instance.is_staff and instance != request_user):
+                  raise PermissionDenied("You cannot deactivate administrators or other moderators.")
+
+        # Prevent moderators from changing staff/superuser status directly via this field
+        if not request_user.is_superuser:
+            if 'is_staff' in validated_data and validated_data['is_staff'] != instance.is_staff:
+                 raise PermissionDenied("Only administrators can change staff status.")
+            if 'is_superuser' in validated_data: # Superuser status change is blocked in view anyway
+                 raise PermissionDenied("Only administrators can change superuser status.")
+
+
         return super().update(instance, validated_data)
 
 
@@ -155,4 +166,5 @@ class SetPasswordSerializer(serializers.Serializer):
     def validate(self, data):
         if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError({"confirm_password": "Hasła nie są identyczne."})
+        # The validate_password validator is applied directly to the field
         return data

@@ -1,0 +1,114 @@
+INFO 2025-05-05 19:21:15,975 autoreload 26000 13732 Watching for file changes with StatReloader
+INFO 2025-05-05 19:21:27,007 autoreload 12344 10560 Watching for file changes with StatReloader
+INFO 2025-05-05 19:28:04,157 autoreload 24404 27984 Watching for file changes with StatReloader
+INFO 2025-05-05 20:12:01,162 autoreload 28280 26656 Watching for file changes with StatReloader
+INFO 2025-05-05 20:12:12,324 autoreload 19712 13404 Watching for file changes with StatReloader
+INFO 2025-05-05 20:19:24,114 autoreload 28016 2888 Watching for file changes with StatReloader
+INFO 2025-05-05 20:26:05,671 autoreload 28464 26072 Watching for file changes with StatReloader
+INFO 2025-05-05 20:43:25,470 autoreload 20720 29096 Watching for file changes with StatReloader
+INFO 2025-05-05 20:48:19,188 autoreload 13476 1264 Watching for file changes with StatReloader
+INFO 2025-05-05 21:10:51,704 autoreload 29300 23464 Watching for file changes with StatReloader
+INFO 2025-05-05 21:11:21,516 basehttp 29300 15264 "OPTIONS /api/plants/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:21,516 basehttp 29300 23356 "OPTIONS /api/user-plants/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:21,517 basehttp 29300 28940 "OPTIONS /api/user-plants/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:21,517 basehttp 29300 29144 "OPTIONS /api/plants/ HTTP/1.1" 200 0
+WARNING 2025-05-05 21:11:21,538 basehttp 29300 29144 "GET /api/user-plants/ HTTP/1.1" 401 172
+WARNING 2025-05-05 21:11:21,538 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 401 172
+WARNING 2025-05-05 21:11:21,542 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 401 172
+WARNING 2025-05-05 21:11:21,542 basehttp 29300 29144 "GET /api/user-plants/ HTTP/1.1" 401 172
+INFO 2025-05-05 21:11:21,554 basehttp 29300 29144 "OPTIONS /api/token/refresh/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:21,558 basehttp 29300 28940 "OPTIONS /api/token/refresh/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:21,654 basehttp 29300 28940 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-05 21:11:21,668 basehttp 29300 23356 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-05 21:11:21,668 basehttp 29300 29144 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-05 21:11:21,673 basehttp 29300 15264 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-05 21:11:21,742 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:11:21,873 basehttp 29300 15264 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:21,920 basehttp 29300 29144 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:11:21,953 basehttp 29300 28940 "GET /api/user-plants/ HTTP/1.1" 200 2
+WARNING 2025-05-05 21:11:22,158 basehttp 29300 17232 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:11:22,158 basehttp 29300 29388 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:11:22,163 basehttp 29300 2884 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:11:22,231 basehttp 29300 12072 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:11:24,162 basehttp 29300 28940 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:24,162 basehttp 29300 29144 "GET /api/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:11:24,204 basehttp 29300 17296 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+INFO 2025-05-05 21:11:24,301 basehttp 29300 23356 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:24,310 basehttp 29300 15264 "GET /api/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:11:24,523 basehttp 29300 18188 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+WARNING 2025-05-05 21:11:24,524 basehttp 29300 19580 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:11:24,524 basehttp 29300 21332 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+INFO 2025-05-05 21:11:28,267 basehttp 29300 15264 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:28,267 basehttp 29300 23356 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:11:28,344 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:11:28,440 basehttp 29300 23356 "GET /api/user-plants/ HTTP/1.1" 200 2
+WARNING 2025-05-05 21:11:28,608 basehttp 29300 26672 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:11:28,609 basehttp 29300 13476 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:11:28,615 basehttp 29300 9428 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:11:28,615 basehttp 29300 25268 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:11:31,674 basehttp 29300 23356 "OPTIONS /api/user/me/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:31,676 basehttp 29300 28940 "OPTIONS /api/user/me/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:31,783 basehttp 29300 28940 "GET /api/user/me/ HTTP/1.1" 200 233
+INFO 2025-05-05 21:11:31,845 basehttp 29300 23356 "GET /api/user/me/ HTTP/1.1" 200 233
+INFO 2025-05-05 21:11:32,082 basehttp 29300 23356 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:32,101 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:11:32,147 basehttp 29300 15264 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:11:32,165 basehttp 29300 23356 "GET /api/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:11:32,195 basehttp 29300 25792 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:11:32,520 basehttp 29300 28924 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:11:32,520 basehttp 29300 27296 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:11:32,545 basehttp 29300 25244 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:11:35,239 basehttp 29300 23356 "OPTIONS /api/admin/users/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:35,244 basehttp 29300 23356 "OPTIONS /api/admin/plants/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:35,248 basehttp 29300 15264 "OPTIONS /api/admin/users/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:35,249 basehttp 29300 28940 "OPTIONS /api/admin/plants/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:11:35,338 basehttp 29300 23356 "GET /api/admin/users/ HTTP/1.1" 200 923
+INFO 2025-05-05 21:11:35,343 basehttp 29300 28940 "GET /api/admin/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:11:35,392 basehttp 29300 27336 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+INFO 2025-05-05 21:11:35,424 basehttp 29300 15264 "GET /api/admin/users/ HTTP/1.1" 200 923
+INFO 2025-05-05 21:11:35,435 basehttp 29300 23356 "GET /api/admin/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:11:35,713 basehttp 29300 18644 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:11:35,713 basehttp 29300 7396 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:11:35,713 basehttp 29300 6624 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:11:35,713 basehttp 29300 7396 - Broken pipe from ('127.0.0.1', 54675)
+INFO 2025-05-05 21:12:10,933 basehttp 29300 23356 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:12:10,933 basehttp 29300 15264 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:12:11,010 basehttp 29300 28940 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:12:11,011 basehttp 29300 29144 "GET /api/user-plants/ HTTP/1.1" 200 2
+WARNING 2025-05-05 21:12:11,276 basehttp 29300 21044 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:12:11,276 basehttp 29300 28164 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:12:11,282 basehttp 29300 21128 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:12:11,282 basehttp 29300 11904 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:14:54,818 basehttp 29300 19552 "OPTIONS /api/token/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:14:55,368 basehttp 29300 19552 "POST /api/token/ HTTP/1.1" 200 483
+INFO 2025-05-05 21:14:55,565 basehttp 29300 19552 "GET /api/user/me/ HTTP/1.1" 200 207
+INFO 2025-05-05 21:14:55,740 basehttp 29300 19552 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:14:55,760 basehttp 29300 5576 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:14:55,850 basehttp 29300 19552 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:14:55,862 basehttp 29300 5576 "GET /api/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:14:56,186 basehttp 29300 25312 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:14:56,194 basehttp 29300 22396 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:14:56,201 basehttp 29300 20656 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:14:56,233 basehttp 29300 26408 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:14:59,781 basehttp 29300 5576 "GET /api/admin/users/ HTTP/1.1" 200 923
+INFO 2025-05-05 21:14:59,840 basehttp 29300 27572 "GET /api/admin/users/ HTTP/1.1" 200 923
+INFO 2025-05-05 21:14:59,888 basehttp 29300 19552 "GET /api/admin/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:14:59,922 basehttp 29300 6136 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+INFO 2025-05-05 21:14:59,966 basehttp 29300 27572 "GET /api/admin/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:15:00,228 basehttp 29300 13608 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:15:00,229 basehttp 29300 28044 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:15:00,233 basehttp 29300 28552 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760
+INFO 2025-05-05 21:15:01,623 basehttp 29300 27572 "OPTIONS /api/admin/user-plants/?user=2 HTTP/1.1" 200 0
+INFO 2025-05-05 21:15:01,708 basehttp 29300 27572 "GET /api/admin/user-plants/?user=2 HTTP/1.1" 200 808
+INFO 2025-05-05 21:15:04,658 basehttp 29300 27572 "OPTIONS /api/admin/user-plants/4/water/ HTTP/1.1" 200 0
+INFO 2025-05-05 21:15:04,725 views 29300 27572 Admin/Mod 'technik' watered plant 'Monstera' for user 'Milusia'.
+INFO 2025-05-05 21:15:04,729 basehttp 29300 27572 "POST /api/admin/user-plants/4/water/ HTTP/1.1" 200 409
+INFO 2025-05-05 21:15:04,810 basehttp 29300 27572 "GET /api/admin/user-plants/?user=2 HTTP/1.1" 200 808
+INFO 2025-05-05 21:15:15,926 basehttp 29300 19552 "GET /api/plants/ HTTP/1.1" 200 11126
+INFO 2025-05-05 21:15:15,926 basehttp 29300 27572 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:15:16,007 basehttp 29300 7120 "GET /api/user-plants/ HTTP/1.1" 200 2
+INFO 2025-05-05 21:15:16,007 basehttp 29300 5576 "GET /api/plants/ HTTP/1.1" 200 11126
+WARNING 2025-05-05 21:15:16,271 basehttp 29300 5916 "GET /media/plant_images/Zamioculcas_Zamiifolia.jpg HTTP/1.1" 404 3804
+WARNING 2025-05-05 21:15:16,271 basehttp 29300 7816 "GET /media/plant_images/Ficus_Lyrata.jpg HTTP/1.1" 404 3764
+WARNING 2025-05-05 21:15:16,271 basehttp 29300 26168 "GET /media/plant_images/Pothos.jpg HTTP/1.1" 404 3740
+WARNING 2025-05-05 21:15:16,275 basehttp 29300 26516 "GET /media/plant_images/Begonia_Rex.jpg HTTP/1.1" 404 3760

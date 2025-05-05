@@ -10,7 +10,6 @@ import PlantDetailModal from '../components/PlantDetailModal';
 import api, {
     fetchUserPlants, // User's plants (standard endpoint)
     fetchAllPlants, // All APPROVED plants (standard endpoint)
-    addNewPlantDefinition, // Used by users to PROPOSE a new plant (calls standard endpoint POST /plants/)
     addPlantToUserCollection, // Add APPROVED plant to user's collection (standard endpoint)
     waterUserPlant, // Water user's plant (standard endpoint)
     deleteUserPlant, // Delete user's plant (standard endpoint)
