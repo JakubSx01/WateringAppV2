@@ -1,4 +1,3 @@
-# MyappBackend/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -8,41 +7,47 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework.routers import DefaultRouter
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny # Ensure AllowAny is imported
+
 from myapp.views import (
-    PlantViewSet,
-    UserPlantViewSet,
-    WateringHistoryViewSet,
-    UserRegistrationView,
-    AdminPlantViewSet,
-    AdminUserPlantViewSet,
-    AdminUserViewSet,
-    CurrentUserView # <--- Check this name here
+    PlantViewSet, # Standard user/public (Read-only list, POST to propose)
+    UserPlantViewSet, # Standard user's plants
+    WateringHistoryViewSet, # Standard user's history
+    UserRegistrationView, # Registration (AllowAny)
+    AdminPlantViewSet, # Admin/Mod managing ALL plants/definitions
+    AdminUserPlantViewSet, # Admin/Mod managing ALL user plants
+    AdminUserViewSet, # Admin/Mod managing users
+    CurrentUserView # Get current user details
 )
 
-# Create separate routers for different access levels if you want distinct prefixes like /api/admin/
+# Standard user API routes
 router = DefaultRouter()
-router.register(r'plants', PlantViewSet, basename='plant') # Standard user/public plant views
-router.register(r'user-plants', UserPlantViewSet, basename='userplant') # Standard user's plants views
-router.register(r'watering-history', WateringHistoryViewSet, basename='wateringhistory') # Standard user's history
+# PlantViewSet now allows POST for proposing, but list/retrieve are read-only (handled by get_queryset)
+router.register(r'plants', PlantViewSet, basename='plant')
+router.register(r'user-plants', UserPlantViewSet, basename='userplant')
+router.register(r'watering-history', WateringHistoryViewSet, basename='wateringhistory')
 
-# Router for Admin/Moderator views
+# Admin/Moderator API routes (all under /api/admin/)
 admin_router = DefaultRouter()
-admin_router.register(r'plants', AdminPlantViewSet, basename='admin-plant') # Admin/Mod managing ALL plants
+admin_router.register(r'plants', AdminPlantViewSet, basename='admin-plant') # Admin/Mod managing ALL plants/definitions
 admin_router.register(r'user-plants', AdminUserPlantViewSet, basename='admin-userplant') # Admin/Mod managing ALL user plants
 admin_router.register(r'users', AdminUserViewSet, basename='admin-user') # Admin/Mod managing users
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # JWT Token endpoints (AllowAny)
     path('api/token/', TokenObtainPairView.as_view(permission_classes=[AllowAny]), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(permission_classes=[AllowAny]), name='token_refresh'),
+    # User Registration endpoint (AllowAny)
     path('api/register/', UserRegistrationView.as_view(), name='register'),
 
-    # New endpoint to get current user details
+    # New endpoint to get current user details (IsAuthenticated)
     path('api/user/me/', CurrentUserView.as_view(), name='current_user'),
 
+    # Standard User API routes
     path('api/', include(router.urls)),
+    # Admin/Moderator API routes
     path('api/admin/', include(admin_router.urls)),
 ]
 

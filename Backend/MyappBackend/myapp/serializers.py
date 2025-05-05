@@ -1,11 +1,15 @@
 # myapp/serializers.py
 from rest_framework import serializers
 from .models import Plant, UserPlant, WateringHistory
-from django.contrib.auth.models import User, Group # Import Group if using it for roles
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
-# UserRegistrationSerializer (OK as is for now)
+# --- FIX: Remove circular import ---
+# from .views import AdminUserPlantViewSet # REMOVE THIS LINE
+
+# UserRegistrationSerializer (OK as is)
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -15,138 +19,135 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'password', 'password2', 'first_name', 'last_name')
 
     def validate(self, data):
+        if User.objects.filter(username=data['username']).exists():
+             raise serializers.ValidationError({"username": "Użytkownik o tej nazwie już istnieje."})
+        if 'email' in data and data['email'] and User.objects.filter(email=data['email']).exists():
+             raise serializers.ValidationError({"email": "Użytkownik o tym adresie email już istnieje."})
+
         if data['password'] != data['password2']:
             raise serializers.ValidationError({"password": "Hasła nie są identyczne."})
-        # password2 is popped here, so it's not passed to create
-        return data
+
+        validated_data = super().validate(data)
+        validated_data.pop('password2')
+        return validated_data
 
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''), # email is optional in Django User model
+            email=validated_data.get('email', ''),
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', '')
         )
-        # Note: password2 is already removed by validate method
         return user
 
-# --- Updated PlantSerializer ---
+# PlantSerializer
 class PlantSerializer(serializers.ModelSerializer):
-    # proposed_by will be read-only for general users
-    # For admin/moderator, it might be writable or displayed differently
-    proposed_by = serializers.ReadOnlyField(source='proposed_by.username') # Display proposer's username
+    proposed_by = serializers.ReadOnlyField(source='proposed_by.username')
+    status = serializers.ChoiceField(choices=Plant.STATUS_CHOICES, read_only=True) # Default read-only
 
     class Meta:
         model = Plant
         fields = [
-            'id',
-            'name',
-            'species',
-            'image',
-            'water_amount_ml',
-            'watering_frequency_days',
-            'sunlight',
-            'soil_type',
-            'preferred_temperature',
-            'status',       # Include status
-            'proposed_by'   # Include proposed_by (read-only via source)
+            'id', 'name', 'species', 'image', 'water_amount_ml',
+            'watering_frequency_days', 'sunlight', 'soil_type',
+            'preferred_temperature', 'status', 'proposed_by'
         ]
-        read_only_fields = ['status', 'proposed_by'] # Default read-only for non-staff
+        read_only_fields = ['proposed_by']
 
-    # Custom create to set default status and proposed_by
-    def create(self, validated_data):
-        # Assuming the user is available in the serializer context (set by the view)
-        request_user = self.context['request'].user
-        # New plants proposed by users default to pending
-        validated_data['status'] = Plant.STATUS_PENDING
-        validated_data['proposed_by'] = request_user
-        return super().create(validated_data)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request_user = self.context.get('request').user if 'request' in self.context else None
+
+        # --- FIX: Check for specific context flag instead of view type ---
+        is_admin_plant_view_context = self.context.get('is_admin_plant_view', False)
+
+        # If in admin plant view context (staff/superuser), make status writable
+        if is_admin_plant_view_context:
+             self.fields['status'].read_only = False
+        # Otherwise (standard user view, or non-admin view), status remains read-only (default)
 
 
-# UserPlantSerializer (Mostly fine, ensure it uses the updated PlantSerializer)
+# UserPlantSerializer
 class UserPlantSerializer(serializers.ModelSerializer):
-    # This will now use the updated PlantSerializer which includes status and proposed_by
     plant = PlantSerializer(read_only=True)
+
     plant_id = serializers.PrimaryKeyRelatedField(
         queryset=Plant.objects.all(),
         source='plant',
         write_only=True
     )
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False
+    )
+
     last_watered_at = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = UserPlant
         fields = [
-            'id',
-            'user',
-            'plant',
-            'plant_id',
-            'added_at',
-            'next_watering_date',
-            'last_watered_at'
-            ]
-        read_only_fields = ['user', 'added_at', 'next_watering_date', 'last_watered_at', 'plant']
+            'id', 'user', 'plant', 'plant_id', 'added_at',
+            'next_watering_date', 'last_watered_at'
+        ]
+        read_only_fields = ['added_at', 'next_watering_date', 'last_watered_at', 'plant']
+
+    def __init__(self, *args, **kwargs):
+         super().__init__(*args, **kwargs)
+         # --- FIX: Check for specific context flag instead of view type ---
+         is_admin_user_plant_view_context = self.context.get('is_admin_user_plant_view', False)
+
+         # Make 'user' field writable ONLY in the admin user plant view context
+         self.fields['user'].read_only = not is_admin_user_plant_view_context
+
 
     def get_last_watered_at(self, obj):
-        # Use obj.watering_history for efficiency
         last_watering = obj.watering_history.order_by('-watered_at').first()
-        # Convert to user's timezone if needed, otherwise use obj.watered_at directly
-        # Assuming default Django settings handle timezone, use localtime
         return timezone.localtime(last_watering.watered_at) if last_watering else None
 
-    # No need for custom create logic here, next_watering_date is calculated in the model's save or view's perform_create
 
-
-# WateringHistorySerializer (OK as is)
+# WateringHistorySerializer
 class WateringHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = WateringHistory
         fields = '__all__'
-        read_only_fields = ['watered_at']
+        read_only_fields = ['watered_at', 'user_plant']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.user_plant:
+             representation['user'] = instance.user_plant.user.username
+             representation['plant_name'] = instance.user_plant.plant.name
+        return representation
 
 
-# --- New Serializer for User Management (Admin Only) ---
+# UserSerializer (Admin/Moderator Only)
 class UserSerializer(serializers.ModelSerializer):
-    # Include staff and superuser status
-    is_moderator = serializers.SerializerMethodField() # Custom field for clarity
+    is_moderator = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        # Add fields needed for display and editing (exclude sensitive ones like password)
         fields = [
-            'id',
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'is_active',
-            'is_staff',      # Moderator status
-            'is_superuser',  # Admin status
-            'date_joined',
-            'last_login',
-            'is_moderator' # Custom field
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_active', 'is_staff', 'is_superuser',
+            'date_joined', 'last_login', 'is_moderator'
         ]
-        read_only_fields = ['date_joined', 'last_login', 'is_superuser', 'is_moderator'] # is_superuser is read-only
+        read_only_fields = ['date_joined', 'last_login', 'is_superuser', 'is_moderator']
 
     def get_is_moderator(self, obj):
-        # Moderator check (e.g., if is_staff is the definition of a moderator)
-        return obj.is_staff and not obj.is_superuser # Superusers are admins, not just moderators
+        return obj.is_staff and not obj.is_superuser
 
-    # Add update logic for changing user details (excluding password here)
     def update(self, instance, validated_data):
-        # Prevent changing superuser status via this serializer for safety
-        validated_data.pop('is_superuser', None)
-         # Prevent changing moderator status if user is not an admin (handled by permission)
-        # Also prevent non-admin from changing their OWN is_staff status
         request_user = self.context.get('request').user
-        if 'is_staff' in validated_data and (not request_user.is_superuser or request_user == instance):
-             validated_data.pop('is_staff', None)
+
+        if 'is_staff' in validated_data and validated_data['is_staff'] is True and not request_user.is_superuser:
+             raise ValidationError({"is_staff": "Only administrators can grant moderator status."})
 
         return super().update(instance, validated_data)
 
 
-# Serializer specifically for changing a user's password (Admin Only)
+# SetPasswordSerializer (Admin Only)
 class SetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)

@@ -1,6 +1,7 @@
 // Frontend/my-react-app/src/components/AddPlantForm.js
 import React, { useState } from 'react';
-import { addNewPlantDefinition } from '../services/api'; // Correct import path
+// Correct import path, should call standard endpoint POST /plants/
+import { addNewPlantDefinition } from '../services/api';
 import '../styles/AddPlantForm.css';
 
 // Zaktualizowane opcje gleby z KLUCZAMI jako value
@@ -44,21 +45,32 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        onError(''); // Clear previous errors
+        onError(''); // Clear previous errors passed from parent
 
         // Basic frontend validation (can be more sophisticated)
-        if (!formData.name || !formData.water_amount_ml || !formData.watering_frequency_days) {
+        if (!formData.name.trim() || !String(formData.water_amount_ml).trim() || !String(formData.watering_frequency_days).trim()) {
             onError('Pola: Nazwa, Ilość Wody (ml) i Częstotliwość Podlewania (dni) są wymagane.');
             setLoading(false);
             return;
         }
-         // Validate numeric fields are positive
-        if (Number(formData.water_amount_ml) <= 0 || Number(formData.watering_frequency_days) <= 0) {
-             onError('Ilość wody i częstotliwość podlewania muszą być większe od zera.');
+         // Validate numeric fields are positive integers
+        const waterAmount = Number(formData.water_amount_ml);
+        const wateringFrequency = Number(formData.watering_frequency_days);
+
+        if (!Number.isInteger(waterAmount) || waterAmount <= 0) {
+             onError('Ilość wody (ml) musi być dodatnią liczbą całkowitą.');
              setLoading(false);
              return;
         }
-        if (formData.preferred_temperature && isNaN(Number(formData.preferred_temperature))) {
+         if (!Number.isInteger(wateringFrequency) || wateringFrequency <= 0) {
+             onError('Częstotliwość podlewania (dni) musi być dodatnią liczbą całkowitą.');
+             setLoading(false);
+             return;
+        }
+
+        // Validate preferred temperature if provided
+        const preferredTemperature = formData.preferred_temperature === '' ? null : Number(formData.preferred_temperature);
+        if (formData.preferred_temperature !== '' && (preferredTemperature === null || isNaN(preferredTemperature))) {
              onError('Preferowana temperatura musi być liczbą.');
              setLoading(false);
              return;
@@ -67,31 +79,31 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
 
         const dataToSend = new FormData();
 
-        // Append required fields
-        dataToSend.append('name', formData.name.trim()); // Trim whitespace
-        dataToSend.append('water_amount_ml', Number(formData.water_amount_ml));
-        dataToSend.append('watering_frequency_days', Number(formData.watering_frequency_days));
+        // Append required fields (already validated)
+        dataToSend.append('name', formData.name.trim());
+        dataToSend.append('water_amount_ml', waterAmount);
+        dataToSend.append('watering_frequency_days', wateringFrequency);
 
-        // Append optional fields only if they have a non-empty value
+        // Append optional fields only if they have a non-empty value or are explicitly set
         if (formData.species && formData.species.trim()) {
             dataToSend.append('species', formData.species.trim());
         }
-        if (formData.sunlight) {
+        if (formData.sunlight) { // select has default "" value, only send if a choice is made
             dataToSend.append('sunlight', formData.sunlight);
         }
-        if (formData.soil_type) {
+        if (formData.soil_type) { // select has default "" value, only send if a choice is made
             dataToSend.append('soil_type', formData.soil_type);
         }
-        // Append optional number only if it's a valid number
-        if (formData.preferred_temperature && !isNaN(Number(formData.preferred_temperature))) {
-            dataToSend.append('preferred_temperature', Number(formData.preferred_temperature));
+        // Append optional temperature only if it's a valid number (already checked and converted to null if empty string)
+        if (preferredTemperature !== null) {
+             dataToSend.append('preferred_temperature', preferredTemperature);
         }
         if (formData.image) {
             dataToSend.append('image', formData.image);
         }
 
         // Debug: Log FormData contents
-        console.log("Wysyłanie danych FormData do /api/plants/:");
+        console.log("Wysyłanie danych FormData do /api/plants/ (propozycja):");
         for (let [key, value] of dataToSend.entries()) {
              // For File objects, log the name and type
              if (value instanceof File) {
@@ -103,6 +115,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
 
 
         try {
+            // Use the addNewPlantDefinition function which calls api.post('plants/', ...)
             await addNewPlantDefinition(dataToSend);
             setFormData({ // Reset form
                 name: '', species: '', water_amount_ml: '', watering_frequency_days: '',
@@ -113,7 +126,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
             if (imageInput) {
                  imageInput.value = '';
             }
-            onPlantAdded(); // Callback on success
+            onPlantAdded(); // Callback on success (toggles form visibility, shows success message)
         } catch (error) {
             console.error('Błąd dodawania nowej rośliny:', error.response?.data || error.message);
             let errorMessage = 'Nie udało się dodać rośliny. Sprawdź wprowadzone dane lub spróbuj ponownie później.'; // Default message
@@ -134,6 +147,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
                         soil_type: "Typ gleby",
                         preferred_temperature: "Temperatura (°C)",
                         image: "Zdjęcie",
+                        detail: "Błąd ogólny", // Handle DRF detail field
                         non_field_errors: "Błąd ogólny", // Handle non-field errors
                     };
 
@@ -151,16 +165,19 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
                 }
 
                 if (detailedMessages.length > 0) {
-                    // Join messages, limit length if necessary
                     errorMessage = `Błąd walidacji: ${detailedMessages.join('; ')}`;
                 } else if (error.response.status >= 500) {
                      errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
                 }
                  // Consider specific status codes
                 else if (error.response.status === 400) {
-                     errorMessage = 'Nieprawidłowe zapytanie. Sprawdź wysłane dane.';
+                     if (detailedMessages.length === 0) { // Fallback if no specific field errors
+                          errorMessage = 'Nieprawidłowe zapytanie. Sprawdź wysłane dane.';
+                     }
                 } else if (error.response.status === 401 || error.response.status === 403) {
-                     errorMessage = 'Brak autoryzacji do wykonania tej operacji.';
+                     // Should be authenticated to propose, but not necessarily staff/admin
+                     errorMessage = 'Brak autoryzacji do wykonania tej operacji. Zaloguj się ponownie.';
+                     if (errors.detail) errorMessage = errors.detail; // Use backend detail if available
                 }
 
             } else if (error.request) {
@@ -170,7 +187,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
                 // Something happened in setting up the request that triggered an Error
                 errorMessage = `Wystąpił błąd aplikacji: ${error.message}`;
             }
-            onError(errorMessage); // Pass the final error message back
+            onError(errorMessage); // Pass the final error message back to parent
         } finally {
             setLoading(false);
         }
@@ -178,7 +195,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
 
     return (
         <div className="add-plant-form-container">
-            <h3 className="add-plant-form-title">Dodaj Nową Roślinę do Bazy Danych</h3>
+            <h3 className="add-plant-form-title">Zaproponuj Nową Roślinę do Globalnej Bazy</h3> {/* Updated Title */}
             <form onSubmit={handleSubmit} className="add-plant-form">
                  {/* Name Input */}
                  <div className="form-group">
@@ -235,7 +252,7 @@ const AddPlantForm = ({ onPlantAdded, onError }) => {
 
                 {/* Submit Button - Spans across grid columns in CSS */}
                 <button type="submit" className="button" disabled={loading}>
-                    {loading ? 'Dodawanie...' : 'Dodaj Roślinę do Bazy'}
+                    {loading ? 'Wysyłanie...' : 'Zaproponuj Roślinę'} {/* Updated button text */}
                 </button>
             </form>
         </div>

@@ -3,27 +3,21 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api/', // Use env variable
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api/',
 });
 
 // Interceptor for automatically adding JWT token and handling FormData Content-Type
 api.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); // Use 'token' key
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Check if data is FormData AFTER potentially adding Authorization header
     if (config.data instanceof FormData) {
-      // Let the browser set the Content-Type for FormData, removing the default
-      delete config.headers['Content-Type'];
-    } else {
-      // Ensure JSON Content-Type is set for non-FormData requests
-      config.headers['Content-Type'] = 'application/json';
+      delete config.headers['Content-Type']; // Let browser set boundary
+    } else if (!config.headers['Content-Type']) {
+       config.headers['Content-Type'] = 'application/json';
     }
 
     return config;
@@ -31,92 +25,87 @@ api.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-// Handle token expiration (Response Interceptor - KEEP AS IS, this looks correct)
+// Handle token expiration (Response Interceptor)
 api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
-    // Prevent infinite retry loops
     if (originalRequest._retry) {
+        console.log("API Interceptor: Retry failed, rejecting.");
         return Promise.reject(error);
     }
 
-    // Check for token expiration (status 401) and if it's not a retry request
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // Mark as retry
-      const refreshToken = localStorage.getItem('refreshToken');
+    if (error.response?.status === 401 && !originalRequest._retry &&
+        !originalRequest.url.includes('/token/') && !originalRequest.url.includes('/register/')) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refreshToken'); // Use 'refreshToken' key
 
       if (refreshToken) {
         try {
-          console.log("Attempting token refresh...");
-          const response = await axios.post(`${api.defaults.baseURL}token/refresh/`, { // Use api instance baseURL
+          console.log("API Interceptor: Attempting token refresh...");
+          const response = await axios.post(`${api.defaults.baseURL}token/refresh/`, {
             refresh: refreshToken
-          }, { // Ensure refresh request doesn't use the expired token interceptor logic itself
-             headers: { 'Content-Type': 'application/json' }
+          }, {
+             headers: { 'Content-Type': 'application/json', 'Authorization': '' }
           });
           const newAccessToken = response.data.access;
-          console.log("Token refreshed successfully.");
+          console.log("API Interceptor: Token refreshed successfully.");
 
-          // Store the new token
-          localStorage.setItem('token', newAccessToken);
+          localStorage.setItem('token', newAccessToken); // Use 'token' key
 
-          // Update the Authorization header for the original request and the default
           api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
           originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
-          // Resend the original request with the new token
           return api(originalRequest);
         } catch (refreshError) {
-          console.error("Refresh token failed:", refreshError.response?.data || refreshError.message);
-          // If refresh fails, logout the user
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          delete api.defaults.headers.common['Authorization']; // Remove default header
-          // Redirect to login, ensuring it doesn't cause infinite loops
-          // Use window.location.href to force a full page reload and clear React state/router history
+          console.error("API Interceptor: Refresh token failed:", refreshError.response?.data || refreshError.message);
+          localStorage.removeItem('token'); // Use 'token' key
+          localStorage.removeItem('refreshToken'); // Use 'refreshToken' key
+          delete api.defaults.headers.common['Authorization'];
           if (window.location.pathname !== '/login') {
-             console.log("Redirecting to login due to refresh failure.");
+             console.log("API Interceptor: Redirecting to login due to refresh failure.");
              window.location.href = '/login';
           }
           return Promise.reject(refreshError);
         }
       } else {
-         console.log("No refresh token found, logging out and redirecting to login.");
-         localStorage.removeItem('token');
-         localStorage.removeItem('refreshToken'); // Also remove refresh token
+         console.log("API Interceptor: No refresh token found, logging out and redirecting to login.");
+         localStorage.removeItem('token'); // Use 'token' key
+         localStorage.removeItem('refreshToken'); // Use 'refreshToken' key
          delete api.defaults.headers.common['Authorization'];
          if (window.location.pathname !== '/login') {
             window.location.href = '/login';
          }
       }
     }
-    // For other errors (like 403 Forbidden for permission issues), just reject
     return Promise.reject(error);
   }
 );
 
-// --- User & Public Plant API functions (Existing, maybe slight mods) ---
+// --- User & Public Plant API functions ---
 /**
- * Fetches all available plant definitions from the global database (filtered by backend).
+ * Fetches all available plant definitions from the global database (filtered by backend for status=APPROVED for non-staff).
  */
 export const fetchAllPlants = async () => {
-  return await api.get('plants/'); // Backend viewset will filter by status for non-staff
+  return await api.get('plants/'); // Hits PlantViewSet (gets APPROVED only for users, all for staff/admin via same view)
 };
 
 /**
  * Adds a new plant definition to the global database (requires moderation).
+ * This function is for users proposing a plant. It hits the standard endpoint
+ * where the viewset/serializer ensures status is set to PENDING and proposer is recorded.
  * @param {FormData} plantData - FormData object containing plant details (name, species, etc., and potentially image file)
  */
 export const addNewPlantDefinition = async (plantData) => {
-  return await api.post('plants/', plantData); // Backend viewset will set status=PENDING
+    return await api.post('plants/', plantData); // Hits PlantViewSet create (sets status=PENDING)
 };
 
 /**
- * Deletes a specific user plant.
+ * Deletes a specific user plant from the current user's collection.
  * @param {number} userPlantId - The ID of the UserPlant instance to delete.
  */
 export const deleteUserPlant = async (userPlantId) => {
-  return await api.delete(`user-plants/${userPlantId}/`); // User deletes their own
+  return await api.delete(`user-plants/${userPlantId}/`);
 };
 
 /**
@@ -124,22 +113,22 @@ export const deleteUserPlant = async (userPlantId) => {
  * @param {number} plantId - The ID of the plant definition to add.
  */
 export const addPlantToUserCollection = async (plantId) => {
-  return await api.post('user-plants/', { plant_id: plantId }); // User adds to their collection
+  return await api.post('user-plants/', { plant_id: plantId });
 };
 
 /**
- * Waters a specific user plant.
+ * Waters a specific user plant for the current user.
  * @param {number} userPlantId - The ID of the UserPlant instance.
  */
 export const waterUserPlant = async (userPlantId) => {
-    return await api.post(`user-plants/${userPlantId}/water/`); // User waters their own
+    return await api.post(`user-plants/${userPlantId}/water/`);
 };
 
 /**
  * Fetches plants belonging to the current user.
  */
 export const fetchUserPlants = async () => {
-    return await api.get('user-plants/'); // User fetches their own
+    return await api.get('user-plants/');
 };
 
 /**
@@ -149,11 +138,10 @@ export const fetchUserPlants = async () => {
 export const loginUser = async (credentials) => {
   const response = await api.post('token/', credentials);
   if (response.data.access) {
-    // Make sure these keys match what you retrieve with getItem elsewhere
-    localStorage.setItem('token', response.data.access); // <-- Use 'token' key
-    localStorage.setItem('refreshToken', response.data.refresh); // <-- Use 'refreshToken' key
+    localStorage.setItem('token', response.data.access);
+    localStorage.setItem('refreshToken', response.data.refresh);
   }
-  return response.data; // Return the data payload
+  return response.data;
 };
 
 /**
@@ -164,19 +152,21 @@ export const registerUser = async (userData) => {
     return await api.post('register/', userData);
 };
 
-// --- New User Data Fetch (needed after login to get roles) ---
+/**
+ * Fetches details of the currently authenticated user.
+ */
 export const fetchCurrentUser = async () => {
-     return await api.get('user/me/'); // You need to add this endpoint on the backend
+     return await api.get('user/me/');
 };
 
 
-// --- New Admin/Moderator API functions ---
+// --- Admin/Moderator API functions (using /api/admin/ prefix) ---
 
 /**
  * Fetches ALL plant definitions (including pending/rejected). Admin/Moderator only.
  */
 export const fetchAllPlantDefinitions = async () => {
-    return await api.get('admin/plants/');
+    return await api.get('admin/plants/'); // Hits AdminPlantViewSet (gets all)
 };
 
 /**
@@ -198,17 +188,10 @@ export const rejectPlantDefinition = async (plantId) => {
 /**
  * Updates a plant definition. Admin/Moderator only.
  * @param {number} plantId - The ID of the Plant definition.
- * @param {object} plantData - Updated plant data. Can be FormData.
+ * @param {object | FormData} plantData - Updated plant data.
  */
 export const updatePlantDefinition = async (plantId, plantData) => {
-    // Note: If sending FormData with partial data, use PATCH
-    const method = plantData instanceof FormData ? 'patch' : 'put'; // Assuming PUT for full update, PATCH for partial
-    return await api({
-        method: method,
-        url: `admin/plants/${plantId}/`,
-        data: plantData
-    });
-    // Or simply: return await api.put/patch(`admin/plants/${plantId}/`, plantData);
+     return await api.patch(`admin/plants/${plantId}/`, plantData);
 };
 
 /**
@@ -220,19 +203,32 @@ export const deletePlantDefinition = async (plantId) => {
 };
 
 /**
- * Fetches ALL UserPlant instances. Admin/Moderator only.
+ * Fetches ALL UserPlant instances, optionally filtered by user. Admin/Moderator only.
+ * @param {number} [userId] - Optional. Filter by user ID.
  */
-export const fetchAllUserPlants = async () => {
-    return await api.get('admin/user-plants/');
+export const fetchAllUserPlants = async (userId = null) => {
+    let url = 'admin/user-plants/';
+    if (userId !== null && userId !== undefined) {
+         url += `?user=${userId}`;
+    }
+    return await api.get(url);
+};
+
+/**
+ * Creates a UserPlant instance for a specific user. Admin/Moderator only.
+ * @param {object} userPlantData - { user: userId, plant_id: plantId, ... }
+ */
+export const createAnyUserPlant = async (userPlantData) => {
+     return await api.post('admin/user-plants/', userPlantData);
 };
 
 /**
  * Updates a UserPlant instance. Admin/Moderator only.
  * @param {number} userPlantId - The ID of the UserPlant instance.
- * @param {object} userPlantData - Updated user plant data (e.g., next_watering_date, plant_id).
+ * @param {object} userPlantData - Updated user plant data.
  */
-export const updateUserPlant = async (userPlantId, userPlantData) => {
-     return await api.patch(`admin/user-plants/${userPlantId}/`, userPlantData); // Use patch for partial
+export const updateAnyUserPlant = async (userPlantId, userPlantData) => {
+     return await api.patch(`admin/user-plants/${userPlantId}/`, userPlantData);
 };
 
 /**
@@ -243,6 +239,13 @@ export const deleteAnyUserPlant = async (userPlantId) => {
      return await api.delete(`admin/user-plants/${userPlantId}/`);
 };
 
+/**
+ * Waters a specific UserPlant instance (for any user). Admin/Moderator only.
+ * @param {number} userPlantId - The ID of the UserPlant instance.
+ */
+export const waterAnyUserPlant = async (userPlantId) => {
+     return await api.post(`admin/user-plants/${userPlantId}/water/`);
+};
 
 /**
  * Fetches ALL users. Admin/Moderator only.
@@ -253,10 +256,10 @@ export const fetchAllUsers = async () => {
 
 /**
  * Creates a new user via admin panel. Admin only.
- * @param {object} userData - User data (username, email, etc., but NOT password initially).
+ * @param {object} userData - User data (username, email, etc., but NOT password).
  */
 export const createNewUser = async (userData) => {
-    return await api.post('admin/users/', userData); // AdminUserViewSet create
+    return await api.post('admin/users/', userData);
 };
 
 /**
@@ -265,7 +268,7 @@ export const createNewUser = async (userData) => {
  * @param {object} userData - Updated user data.
  */
 export const updateUserDetails = async (userId, userData) => {
-    return await api.patch(`admin/users/${userId}/`, userData); // AdminUserViewSet update
+    return await api.patch(`admin/users/${userId}/`, userData);
 };
 
 /**
@@ -273,7 +276,7 @@ export const updateUserDetails = async (userId, userData) => {
  * @param {number} userId - The ID of the user to delete.
  */
 export const deleteUser = async (userId) => {
-    return await api.delete(`admin/users/${userId}/`); // AdminUserViewSet destroy
+    return await api.delete(`admin/users/${userId}/`);
 };
 
 /**
@@ -282,8 +285,8 @@ export const deleteUser = async (userId) => {
  * @param {object} passwordData - { new_password, confirm_password }.
  */
 export const setUserPassword = async (userId, passwordData) => {
-    return await api.post(`admin/users/${userId}/set-password/`, passwordData); // AdminUserViewSet set_password action
+  // --- FIX: Change hyphen to underscore ---
+  return await api.post(`admin/users/${userId}/set_password/`, passwordData);
 };
 
-
-export default api; // Export the configured instance as default
+export default api;

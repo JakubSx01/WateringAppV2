@@ -1,6 +1,6 @@
 // Frontend/my-react-app/src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import '../styles/Navbar.css';
 
 // Accept currentUser, isAdmin, isModerator props
@@ -10,23 +10,14 @@ const Navbar = ({ currentUser, isAdmin, isModerator }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-
-  // No need for useEffect to check token directly if using currentUser prop
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken'); // Ensure refresh token is also removed
-    // Clear axios default header if set in api.js (good practice)
-    // import api from '../services/api'; // <-- Import api instance if needed here
-    // if (api && api.defaults && api.defaults.headers && api.defaults.headers.common) {
-    //      delete api.defaults.headers.common['Authorization'];
-    // }
-    // Force a full page reload to clear all state and re-initialize app
+    localStorage.removeItem('refreshToken');
+    // Clearing axios default header is handled in api.js interceptor on refresh failure/logout
+    // A full page reload is the most reliable way to clear all state after logout
     window.location.href = '/';
-    // navigate('/'); // navigate might not fully reset all state if not handled carefully
   };
-
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -41,7 +32,6 @@ const Navbar = ({ currentUser, isAdmin, isModerator }) => {
       setDropdownOpen(false);
       setMenuOpen(false);
   }, [location.pathname]);
-
 
   return (
     <nav className="navbar">
@@ -58,6 +48,7 @@ const Navbar = ({ currentUser, isAdmin, isModerator }) => {
         </button>
 
         <ul className={`nav-links ${menuOpen ? 'show' : ''}`}>
+          {/* Home link (always visible) */}
           <li>
             <Link
               to="/"
@@ -67,61 +58,49 @@ const Navbar = ({ currentUser, isAdmin, isModerator }) => {
             </Link>
           </li>
 
-          {/* Show Dashboard link if authenticated */}
+          {/* Group authenticated-only links inside a Fragment */}
           {isLoggedIn && (
-            <li>
-              <Link
-                to="/dashboard"
-                className={`nav-link ${location.pathname === '/dashboard' ? 'active-link' : ''}`}
-              >
-                Moje rośliny
-              </Link>
-            </li>
-          )}
-
-          {/* Show Moderator Panel link if staff or admin */}
-           {isLoggedIn && (isModerator || isAdmin) && (
-             <li>
-               <Link
-                 to="/moderator-panel"
-                 className={`nav-link ${location.pathname === '/moderator-panel' ? 'active-link' : ''}`}
-               >
-                 Panel Moderatora
-               </Link>
-             </li>
-           )}
-
-           {/* Show Admin Panel link if admin */}
-            {isLoggedIn && isAdmin && (
+            <> {/* Fragment to hold Dashboard and Admin/Mod links if the user is logged in */}
               <li>
                 <Link
-                  to="/admin-panel"
-                  className={`nav-link ${location.pathname === '/admin-panel' ? 'active-link' : ''}`}
+                  to="/dashboard"
+                  className={`nav-link ${location.pathname === '/dashboard' ? 'active-link' : ''}`}
                 >
-                  Panel Administratora
+                  Moje rośliny
                 </Link>
               </li>
-            )}
+
+              {/* Show Admin Panel link if the user is Admin OR Moderator */}
+              {(isModerator || isAdmin) && (
+                <li>
+                  <Link
+                    to="/admin-panel"
+                    className={`nav-link ${location.pathname === '/admin-panel' ? 'active-link' : ''}`}
+                  >
+                    Panel Administratora
+                  </Link>
+                </li>
+              )}
+            </>
+          )} {/* End Fragment for authenticated-only links */}
 
 
-          {/* User Menu or Login/Register links */}
+          {/* User Menu OR Login/Register links */}
           {isLoggedIn ? (
             <li className="user-menu">
-               {/* Display username if available */}
               <button className="user-button" onClick={toggleDropdown}>
                 <span className="user-icon">👤</span>
-                {currentUser?.username || 'Moje konto'} {/* Display username or default text */}
+                {currentUser?.username || 'Moje konto'}
               </button>
               <div className={`dropdown-menu ${dropdownOpen ? 'show' : ''}`}>
-                 {/* Add a link to user settings/profile if you create one */}
-                 {/* <Link to="/profile" className="dropdown-item">Profil</Link> */}
+                 {/* Optional profile link: <Link to="/profile" className="dropdown-item">Profil</Link> */}
                  <button className="logout-button" onClick={handleLogout}>
                    Wyloguj się
                  </button>
               </div>
             </li>
           ) : (
-            <>
+            <> {/* Fragment to hold Login and Register links */}
               <li>
                 <Link
                   to="/login"

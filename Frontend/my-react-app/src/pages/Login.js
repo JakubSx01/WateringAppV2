@@ -18,8 +18,8 @@ const Login = ({ onLoginSuccess }) => {
         setLoading(true);
 
         try {
-            const responseData = await loginUser({ username, password });
-            // tokens are already set in localStorage within api.js/loginUser
+            // const responseData = await loginUser({ username, password }); // Removed unused variable
+            await loginUser({ username, password }); // Just call the function
 
             console.log('Login successful, fetching user data...');
 
@@ -31,16 +31,20 @@ const Login = ({ onLoginSuccess }) => {
             // --- End Call ---
 
             if (user) { // If user data was successfully fetched
+                // Check user roles and navigate accordingly
+                // Assuming is_superuser implies is_staff, but check both just in case
                 if (user.is_superuser) {
                     navigate('/admin-panel');
                 } else if (user.is_staff) {
-                    navigate('/moderator-panel');
+                    // Moderators now go to Dashboard but could have a different initial view or extra links
+                    // For now, they go to the standard dashboard. AdminPanel is only for Superusers.
+                    navigate('/dashboard');
                 } else {
                     navigate('/dashboard'); // Regular user
                 }
            } else {
-                // Fallback if fetching user data failed AFTER getting tokens
-                // This shouldn't ideally happen if tokens are valid
+                // Fallback if fetching user data failed AFTER getting tokens (unlikely)
+                console.warn("Login successful, but failed to fetch current user details. Redirecting to dashboard.");
                 navigate('/dashboard');
            }
 
@@ -48,11 +52,22 @@ const Login = ({ onLoginSuccess }) => {
         } catch (err) {
             console.error('Login error:', err.response?.data || err.message);
             if (err.response && err.response.status === 401) {
-                setError('Niepoprawne dane logowania. Sprawdź nazwę użytkownika i hasło.');
-            } else if (err.message === 'Network Error') {
+                // Specific error message for invalid credentials
+                setError(err.response.data.detail || 'Niepoprawne dane logowania. Sprawdź nazwę użytkownika i hasło.');
+            } else if (err.response?.data) {
+                 // Handle other potential API errors (e.g., field errors if validation changed)
+                 let apiErrorMsg = 'Wystąpił błąd podczas logowania: ';
+                 if (typeof err.response.data === 'object') {
+                      apiErrorMsg += Object.values(err.response.data).flat().join(' ');
+                 } else {
+                      apiErrorMsg += err.response.data;
+                 }
+                 setError(apiErrorMsg);
+            }
+             else if (err.message === 'Network Error') {
                  setError('Błąd sieci. Sprawdź połączenie z internetem.');
              } else {
-                setError('Wystąpił błąd podczas logowania. Spróbuj ponownie później.');
+                setError('Wystąpił nieoczekiwany błąd podczas logowania. Spróbuj ponownie później.');
             }
             // Ensure tokens are cleared if login failed
             localStorage.removeItem('token');

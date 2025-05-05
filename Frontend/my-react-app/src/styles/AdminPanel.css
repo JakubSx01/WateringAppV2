@@ -1,5 +1,6 @@
 /* Frontend/my-react-app/src/styles/AdminPanel.css */
-/* Admin panel can reuse many moderator styles */
+/* Admin panel can reuse many dashboard styles like .dashboard-container */
+
 .admin-panel .admin-section {
     background-color: #ffffff;
     padding: 20px;
@@ -81,15 +82,7 @@
     background-color: #c0392b;
 }
 
-/* Specific styles if needed for different sections */
-.admin-panel .user-list .admin-item-image {
-    /* Users might not have images, or use a default icon */
-     border-radius: 50%; /* Round user icon */
-}
-
-/* Frontend/my-react-app/src/styles/AdminPanel.css */
-/* ... (existing styles, can be similar to ModeratorPanel CSS) ... */
-
+/* Specific styles for user list items */
 .admin-panel .user-list-item {
     cursor: pointer; /* Indicate clickable */
     transition: background-color 0.2s ease;
@@ -103,7 +96,15 @@
     margin-right: 15px;
     color: #7f8c8d;
     flex-shrink: 0;
+    border-radius: 50%; /* Round user icon placeholder */
+    width: 40px; /* Match image size */
+    height: 40px; /* Match image size */
+    display: flex; /* Center icon */
+    justify-content: center;
+    align-items: center;
+    background-color: #ecf0f1; /* Light background for placeholder */
 }
+
 
 .admin-panel .back-button {
     margin-bottom: 20px;
@@ -111,13 +112,29 @@
     font-size: 0.9rem;
 }
 
-/* Specific styles for user plant items within the user plants list */
+/* Specific styles for user plant items within the selected user's plants list */
 .admin-panel .user-plants-list .admin-item-image {
      border-radius: 4px; /* Keep square for plant images */
 }
-/* .admin-panel .user-plants-list .admin-item-info small { ... } */
 
 /* Specific styles for plant definition items */
+.admin-panel .plant-definition-item {
+     cursor: pointer; /* Indicate clickable */
+     transition: background-color 0.2s ease;
+}
+.admin-panel .plant-definition-item:hover {
+     background-color: #f8f9fa; /* Light hover effect */
+}
+
 .admin-panel .plant-definition-item .admin-item-image {
      border-radius: 4px; /* Keep square for plant images */
+}
+
+/* Frontend/my-react-app/src/styles/AdminPanel.css */
+/* ... (existing styles, can be similar to ModeratorPanel CSS) ... */
+
+/* Merge or keep common styles */
+.admin-panel .user-management-section,
+.admin-panel .plant-definition-management-section {
+    /* Common padding/margin/background from .admin-section */
 }
